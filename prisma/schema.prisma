@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STORE_OWNER
+  CUSTOMER
+}
+
+enum ReservationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELED
+}
+
+enum NotificationType {
+  RESERVATION_REQUEST
+  RESERVATION_RESPONSE
+  INVENTORY_ALERT
+  SYSTEM_NOTICE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String
+  role      UserRole @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  ownedStores    Store[]
+  reservations   Reservation[]
+  notifications  Notification[]
+  subscriptions  Subscription[]
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+}
+
+model Store {
+  id           String   @id @default(uuid())
+  ownerId      String
+  name         String
+  description  String?
+  address      String
+  latitude     Float?
+  longitude    Float?
+  businessHours Json?
+  pickupHours   Json?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 관계
+  owner        User          @relation(fields: [ownerId], references: [id])
+  inventories  Inventory[]
+  reservations Reservation[]
+  subscriptions Subscription[]
+}
+
+model Inventory {
+  id              String   @id @default(uuid())
+  storeId         String
+  name            String
+  description     String?
+  originalPrice   Decimal
+  discountedPrice Decimal
+  quantity        Int
+  imageUrl        String?
+  expiryDate      DateTime
+  isAvailable     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // 관계
+  store        Store         @relation(fields: [storeId], references: [id])
+  reservations Reservation[]
+}
+
+model Reservation {
+  id            String            @id @default(uuid())
+  inventoryId   String
+  customerId    String
+  storeId       String
+  quantity      Int
+  pickupDate    DateTime
+  status        ReservationStatus @default(PENDING)
+  customerName  String
+  customerPhone String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // 관계
+  inventory Inventory @relation(fields: [inventoryId], references: [id])
+  customer  User      @relation(fields: [customerId], references: [id])
+  store     Store     @relation(fields: [storeId], references: [id])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  content   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  relatedId String?
+  createdAt DateTime         @default(now())
+
+  // 관계
+  user      User             @relation(fields: [userId], references: [id])
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  userId    String
+  storeId   String
+  createdAt DateTime @default(now())
+
+  // 관계
+  user  User  @relation(fields: [userId], references: [id])
+  store Store @relation(fields: [storeId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // 관계
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+} 

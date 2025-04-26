@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-[#e1e7ef] outline-none focus-visible:outline focus-visible:outline-[#5DCA69]/50 dark:border-[#303642] dark:focus-visible:outline-[#5DCA69]/50;
+  }
+  
+  body {
+    @apply bg-[#ffffff] text-[#0f172a] dark:bg-[#0f172a] dark:text-[#ffffff];
+  }
+}
+
+:root {
+  --sidebar: #fafafa;
+  --sidebar-foreground: #424453;
+  --sidebar-primary: #1a1a1f;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #1a1a1f;
+  --sidebar-border: #e6ebf2;
+  --sidebar-ring: #3b82f6;
+}
+
+.dark {
+  --sidebar: #1a1a1f;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #3e69f7;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #28282f;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #28282f;
+  --sidebar-ring: #3b82f6;
+}
+
+@theme inline {
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+} 
