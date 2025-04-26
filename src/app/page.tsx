@@ -144,7 +144,7 @@ export default function Home() {
       </div>
 
       {/* 환경 영향 요약 */}
-      <div className="px-4 py-6 bg-[#f8fafc] dark:bg-[#111827]">
+      <div className="px-4 py-6 bg-[#f8fafc]">
         <EcoImpactCard
           title="이번 달의 환경 기여"
           description="함께 만들어가는 지속가능한 미래"
@@ -156,7 +156,7 @@ export default function Home() {
       {/* 인기 가게 섹션 */}
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-[#0f172a] dark:text-white">인기 가게</h2>
+          <h2 className="text-xl font-bold text-[#0f172a] ">인기 가게</h2>
           <Link href="/shops" className="text-sm text-[#5b87f0] hover:underline flex items-center">
             더보기
             <ArrowRight size={14} className="ml-1" />
@@ -182,7 +182,7 @@ export default function Home() {
       {/* 최근 등록된 재고 섹션 */}
       <div className="p-4 mt-2">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-[#0f172a] dark:text-white">오늘의 할인 상품</h2>
+          <h2 className="text-xl font-bold text-[#0f172a]">오늘의 할인 상품</h2>
           <Link href="/inventory" className="text-sm text-[#5b87f0] hover:underline flex items-center">
             더보기
             <ArrowRight size={14} className="ml-1" />

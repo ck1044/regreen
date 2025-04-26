@@ -536,7 +536,7 @@ export default function StoreEditPage() {
               </TabsContent>
             </Tabs>
 
-            <div className="sticky bottom-16 bg-white dark:bg-[#0f172a] p-4 shadow-lg border-t left-0 right-0">
+            <div className="sticky bottom-16 bg-white bg-[#0f172a] p-4 shadow-lg border-t left-0 right-0">
               <div className="grid grid-cols-2 gap-4">
                 <Button 
                   type="button" 

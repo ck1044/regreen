@@ -51,8 +51,8 @@ const formatDate = (dateString: string) => {
 export const ReservationList = ({ reservations, onViewDetail, onCancel }: ReservationListProps) => {
   if (!reservations || reservations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-6 min-h-[200px] bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <p className="text-gray-500 dark:text-gray-400 mb-2">예약 내역이 없습니다.</p>
+      <div className="flex flex-col items-center justify-center p-6 min-h-[200px] bg-gray-50 bg-gray-800 rounded-lg">
+        <p className="text-gray-500 text-gray-400 mb-2">예약 내역이 없습니다.</p>
         <Button variant="outline" asChild>
           <a href="/">새로운 상품 둘러보기</a>
         </Button>
@@ -135,11 +135,11 @@ const ReservationCard = ({ reservation, onViewDetail, onCancel, showCancelButton
         </div>
 
         <div className="mb-3">
-          <p className="text-sm text-gray-700 dark:text-gray-300">{reservation.itemName} x {reservation.quantity}</p>
+          <p className="text-sm text-gray-700 text-gray-300">{reservation.itemName} x {reservation.quantity}</p>
           <p className="text-sm font-medium">{formatPrice(reservation.totalAmount)}</p>
         </div>
 
-        <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        <div className="text-xs text-gray-500 text-gray-400 mb-3">
           <p>픽업 예정: {formatDate(reservation.pickupDate)}</p>
           <p>예약일: {formatDate(reservation.createdAt)}</p>
         </div>

@@ -108,7 +108,7 @@ export default function InventoryRegisterPage() {
                   {/* 상품 이미지 업로드 */}
                   <div className="mb-6">
                     <FormLabel className="block mb-2">상품 이미지</FormLabel>
-                    <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-gray-50 dark:bg-gray-800 mb-2">
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-gray-50 bg-gray-800 mb-2">
                       {imagePreview ? (
                         <div className="relative w-full h-40 mb-4">
                           <Image 
@@ -246,7 +246,7 @@ export default function InventoryRegisterPage() {
               </CardContent>
             </Card>
 
-            <div className="sticky bottom-16 bg-white dark:bg-[#0f172a] p-4 shadow-lg border-t left-0 right-0">
+            <div className="sticky bottom-16 bg-white bg-[#0f172a] p-4 shadow-lg border-t left-0 right-0">
               <Button type="submit" className="w-full bg-[#5DCA69] hover:bg-[#4db058]">
                 <Save className="h-4 w-4 mr-2" />
                 제품 등록하기

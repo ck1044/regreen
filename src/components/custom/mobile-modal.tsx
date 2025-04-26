@@ -61,14 +61,14 @@ const MobileModal = ({
               leaveTo={position === "bottom" ? "opacity-0 translate-y-full" : "opacity-0 scale-95"}
             >
               <Dialog.Panel className={cn(
-                "w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-[#1e293b] p-6 text-left align-middle shadow-xl transition-all",
+                "w-full max-w-md transform overflow-hidden rounded-2xl bg-white bg-[#1e293b] p-6 text-left align-middle shadow-xl transition-all",
                 position === "bottom" && "rounded-b-none",
                 className
               )}>
                 {title && (
                   <Dialog.Title
                     as="h3"
-                    className="text-lg font-medium leading-6 text-[#0f172a] dark:text-white mb-4 pr-6"
+                    className="text-lg font-medium leading-6 text-[#0f172a] text-white mb-4 pr-6"
                   >
                     {title}
                   </Dialog.Title>
@@ -78,9 +78,9 @@ const MobileModal = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="absolute top-4 right-4 rounded-full p-1 hover:bg-[#f1f5f9] dark:hover:bg-[#334155] transition-colors"
+                    className="absolute top-4 right-4 rounded-full p-1 hover:bg-[#f1f5f9] hover:bg-[#334155] transition-colors"
                   >
-                    <X className="h-5 w-5 text-[#64748b] dark:text-[#94a3b8]" />
+                    <X className="h-5 w-5 text-[#64748b] text-[#94a3b8]" />
                   </button>
                 )}
 

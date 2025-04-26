@@ -48,19 +48,19 @@ const EcoImpactCard = ({
   };
 
   return (
-    <Card className={cn("border border-[#e1e7ef] dark:border-[#303642]", className)}>
+    <Card className={cn("border border-[#e1e7ef] border-[#303642]", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center">
           <Leaf className="mr-2 h-5 w-5 text-[#5DCA69]" />
           {title}
         </CardTitle>
         {description && (
-          <CardDescription className="text-sm text-[#64748b] dark:text-[#94a3b8]">
+          <CardDescription className="text-sm text-[#64748b] text-[#94a3b8]">
             {description}
           </CardDescription>
         )}
         {timeFrame && (
-          <div className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1">
+          <div className="text-xs text-[#64748b] text-[#94a3b8] mt-1">
             {timeFrame}
           </div>
         )}
@@ -68,14 +68,14 @@ const EcoImpactCard = ({
       <CardContent>
         <div className="grid grid-cols-2 gap-4">
           {metrics.map((metric, index) => (
-            <div key={index} className="bg-[#f8fafc] dark:bg-[#1e293b] p-3 rounded-lg">
-              <div className="flex items-center text-sm text-[#64748b] dark:text-[#94a3b8] mb-1">
+            <div key={index} className="bg-[#f8fafc] bg-[#1e293b] p-3 rounded-lg">
+              <div className="flex items-center text-sm text-[#64748b] text-[#94a3b8] mb-1">
                 {getMetricIcon(metric.type)}
                 <span className="ml-2">{getMetricLabel(metric.type)}</span>
               </div>
               
               <div className="flex items-end">
-                <div className="text-xl font-bold text-[#0f172a] dark:text-white">
+                <div className="text-xl font-bold text-[#0f172a] text-white">
                   {metric.value}
                   <span className="text-sm font-medium ml-1">{metric.unit}</span>
                 </div>
@@ -97,7 +97,7 @@ const EcoImpactCard = ({
               </div>
               
               {metric.description && (
-                <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1">
+                <p className="text-xs text-[#64748b] text-[#94a3b8] mt-1">
                   {metric.description}
                 </p>
               )}

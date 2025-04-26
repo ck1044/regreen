@@ -452,7 +452,7 @@ export default function StoreRegisterPage() {
               </TabsContent>
             </Tabs>
 
-            <div className="sticky bottom-16 bg-white dark:bg-[#0f172a] p-4 shadow-lg border-t left-0 right-0">
+            <div className="sticky bottom-16 bg-white bg-[#0f172a] p-4 shadow-lg border-t left-0 right-0">
               <Button type="submit" className="w-full bg-[#5DCA69] hover:bg-[#4db058]">
                 <Save className="h-4 w-4 mr-2" />
                 가게 등록하기

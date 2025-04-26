@@ -1,4 +1,4 @@
-import { MobileLayout } from '@/components/layout/MobileLayout'
+import MobileLayout from '@/components/layout/MobileLayout'
 
 export default function AdminPage() {
   return (

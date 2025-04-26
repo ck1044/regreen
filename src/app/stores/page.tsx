@@ -2,18 +2,28 @@ import MobileLayout from '@/components/layout/MobileLayout'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Store, Plus } from 'lucide-react'
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 
 export default async function StoresPage() {
   // 세션 확인
-  const session = await getServerSession(authOptions);
+  // const session = await getServerSession(authOptions);
   
   // 로그인되지 않은 경우 로그인 페이지로 리디렉션
-  if (!session) {
-    redirect('/auth/signin');
-  }
+  // if (!session) {
+  //   redirect('/auth/signin');
+  // }
+
+  // 테스트를 위한 더미 세션 데이터
+  const session = {
+    user: {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      name: '테스트 유저',
+      role: 'STORE_OWNER'
+    }
+  };
 
   // 실제 구현에서는 여기서 DB에서 사용자의 가게 목록을 가져옵니다
   const userStores = []; // await db.stores.findMany({ where: { ownerId: session.user.id } })
@@ -32,9 +42,9 @@ export default async function StoresPage() {
         </div>
 
         {userStores.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-6 min-h-[300px] bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="flex flex-col items-center justify-center p-6 min-h-[300px] bg-gray-50 bg-gray-800 rounded-lg">
             <Store className="h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 mb-4 text-center">
+            <p className="text-gray-500 text-gray-400 mb-4 text-center">
               등록된 가게가 없습니다.<br />
               새로운 가게를 등록해보세요.
             </p>

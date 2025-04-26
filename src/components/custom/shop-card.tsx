@@ -30,7 +30,7 @@ const ShopCard = ({
   return (
     <Link href={`/shops/${id}`}>
       <div className={cn(
-        "bg-white dark:bg-[#1e293b] rounded-lg shadow overflow-hidden h-full transition-transform hover:translate-y-[-4px]",
+        "bg-white bg-[#1e293b] rounded-lg shadow overflow-hidden h-full transition-transform hover:translate-y-[-4px]",
         className
       )}>
         <div className="relative h-32 w-full">
@@ -53,19 +53,19 @@ const ShopCard = ({
           )}
         </div>
         <div className="p-3">
-          <h3 className="font-medium text-[#0f172a] dark:text-white text-sm line-clamp-1">{name}</h3>
+          <h3 className="font-medium text-[#0f172a] text-white text-sm line-clamp-1">{name}</h3>
           <div className="flex justify-between items-center mt-1">
-            <div className="flex items-center text-xs text-[#64748b] dark:text-[#94a3b8]">
+            <div className="flex items-center text-xs text-[#64748b] text-[#94a3b8]">
               <MapPin size={12} className="mr-1" />
               <span className="line-clamp-1 mr-1">{location}</span>
               {distance && (
-                <span className="text-[#5DCA69] dark:text-[#5DCA69]">{distance}</span>
+                <span className="text-[#5DCA69] ">{distance}</span>
               )}
             </div>
           </div>
           <div className="flex items-center mt-1 text-xs">
             <Star size={12} className="text-yellow-500 mr-1" />
-            <span className="font-medium text-[#0f172a] dark:text-white">{rating.toFixed(1)}</span>
+            <span className="font-medium text-[#0f172a] text-white">{rating.toFixed(1)}</span>
           </div>
         </div>
       </div>

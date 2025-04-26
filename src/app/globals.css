@@ -1,38 +1,76 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
 @layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 142 54% 58%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 142 54% 58%;
+
+    --radius: 0.5rem;
+  }
+
+  .text-primary-color {
+    color: hsl(var(--primary));
+  }
+
+  .bg-primary-color {
+    background-color: hsl(var(--primary));
+  }
+
   * {
-    @apply border-[#e1e7ef] outline-none focus-visible:outline focus-visible:outline-[#5DCA69]/50 dark:border-[#303642] dark:focus-visible:outline-[#5DCA69]/50;
+    @apply border-border;
   }
   
   body {
-    @apply bg-[#ffffff] text-[#0f172a] dark:bg-[#0f172a] dark:text-[#ffffff];
+    @apply bg-background text-foreground;
   }
 }
 
-:root {
-  --sidebar: #fafafa;
-  --sidebar-foreground: #424453;
-  --sidebar-primary: #1a1a1f;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #f4f4f5;
-  --sidebar-accent-foreground: #1a1a1f;
-  --sidebar-border: #e6ebf2;
-  --sidebar-ring: #3b82f6;
+.font-sans {
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-.dark {
-  --sidebar: #1a1a1f;
-  --sidebar-foreground: #f4f4f5;
-  --sidebar-primary: #3e69f7;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #28282f;
-  --sidebar-accent-foreground: #f4f4f5;
-  --sidebar-border: #28282f;
-  --sidebar-ring: #3b82f6;
+/* 아래는 기본 스타일 */
+.text-primary {
+  color: #5DCA69;
 }
+
+.bg-primary {
+  background-color: #5DCA69;
+}
+
+.border-primary {
+  border-color: #5DCA69;
+}
+
+
 
 @theme inline {
   --color-sidebar: var(--sidebar);

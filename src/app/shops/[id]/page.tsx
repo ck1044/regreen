@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -8,6 +8,7 @@ import { MapPin, Clock, Phone, Globe, Star, Bell, BellOff, Share2 } from "lucide
 import { InventoryCard } from "@/components/custom/inventory-card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SubscriptionButton } from '@/components/shop/subscription-button';
 
 // 임시 데이터 - 실제 구현 시에는 API에서 가게 정보를 가져와야 함
 const shopData = {
@@ -142,7 +143,7 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
     return (
       <div className="flex flex-col items-center justify-center p-6 min-h-[50vh]">
         <h1 className="text-xl font-bold mb-2">가게를 찾을 수 없습니다</h1>
-        <p className="text-[#64748b] dark:text-[#94a3b8] mb-4">요청하신 가게 정보가 존재하지 않습니다.</p>
+        <p className="text-[#64748b] text-[#94a3b8] mb-4">요청하신 가게 정보가 존재하지 않습니다.</p>
         <Link href="/shops">
           <Button>가게 목록으로 돌아가기</Button>
         </Link>
@@ -171,49 +172,42 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
       {/* 가게 기본 정보 */}
       <div className="p-4">
         <div className="flex justify-between items-start">
-          <h1 className="text-2xl font-bold text-[#0f172a] dark:text-white">{shop.name}</h1>
-          <Button
-            variant={isSubscribed ? "outline" : "default"}
-            size="sm"
-            className={isSubscribed ? "border-[#5DCA69] text-[#5DCA69]" : "bg-[#5DCA69] hover:bg-[#4db058]"}
-            onClick={toggleSubscription}
-          >
-            {isSubscribed ? (
-              <>
-                <BellOff size={16} className="mr-1" />
-                구독중
-              </>
-            ) : (
-              <>
-                <Bell size={16} className="mr-1" />
-                구독하기
-              </>
-            )}
-          </Button>
+          <h1 className="text-2xl font-bold text-[#0f172a] text-white">{shop.name}</h1>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon">
+              <Share2 className="h-5 w-5" />
+            </Button>
+            <SubscriptionButton 
+              userId="user-1" // 실제 구현에서는 인증된 사용자 ID
+              shopId={shop.id}
+              shopName={shop.name}
+              size="icon"
+            />
+          </div>
         </div>
 
         <div className="flex items-center mt-1 text-sm">
           <Star className="h-4 w-4 text-yellow-500 mr-1" />
           <span className="font-medium">{shop.rating}</span>
-          <span className="text-[#64748b] dark:text-[#94a3b8] ml-1">({shop.reviewCount})</span>
+          <span className="text-[#64748b] text-[#94a3b8] ml-1">({shop.reviewCount})</span>
         </div>
 
-        <p className="mt-3 text-[#0f172a] dark:text-white text-sm">
+        <p className="mt-3 text-[#0f172a] text-white text-sm">
           {shop.description}
         </p>
 
         <div className="mt-4 space-y-2">
           <div className="flex items-start text-sm">
-            <MapPin className="h-5 w-5 text-[#64748b] dark:text-[#94a3b8] mr-2 flex-shrink-0 mt-0.5" />
-            <span className="text-[#0f172a] dark:text-white">{shop.address}</span>
+            <MapPin className="h-5 w-5 text-[#64748b] text-[#94a3b8] mr-2 flex-shrink-0 mt-0.5" />
+            <span className="text-[#0f172a] text-white">{shop.address}</span>
           </div>
           <div className="flex items-center text-sm">
-            <Phone className="h-5 w-5 text-[#64748b] dark:text-[#94a3b8] mr-2" />
-            <span className="text-[#0f172a] dark:text-white">{shop.phone}</span>
+            <Phone className="h-5 w-5 text-[#64748b] text-[#94a3b8] mr-2" />
+            <span className="text-[#0f172a] text-white">{shop.phone}</span>
           </div>
           {shop.website && (
             <div className="flex items-center text-sm">
-              <Globe className="h-5 w-5 text-[#64748b] dark:text-[#94a3b8] mr-2" />
+              <Globe className="h-5 w-5 text-[#64748b] text-[#94a3b8] mr-2" />
               <a 
                 href={`https://${shop.website}`} 
                 target="_blank" 
@@ -229,7 +223,7 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
 
       {/* 탭 섹션 */}
       <Tabs defaultValue="inventory" className="w-full">
-        <div className="border-b border-[#e1e7ef] dark:border-[#303642]">
+        <div className="border-b border-[#e1e7ef] border-[#303642]">
           <TabsList className="bg-transparent">
             <TabsTrigger value="inventory" className="flex-1 data-[state=active]:text-[#5DCA69] data-[state=active]:border-b-2 data-[state=active]:border-[#5DCA69]">
               할인 상품
@@ -263,7 +257,7 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-[#64748b] dark:text-[#94a3b8]">
+              <p className="text-[#64748b] text-[#94a3b8]">
                 현재 등록된 할인 상품이 없습니다.
               </p>
             </div>
@@ -273,15 +267,15 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
         {/* 영업 정보 탭 */}
         <TabsContent value="info" className="p-4">
           <div className="mb-6">
-            <h3 className="font-medium text-[#0f172a] dark:text-white text-sm mb-2 flex items-center">
+            <h3 className="font-medium text-[#0f172a] text-white text-sm mb-2 flex items-center">
               <Clock className="h-4 w-4 mr-1" /> 영업 시간
             </h3>
-            <div className="bg-[#f8fafc] dark:bg-[#1e293b] p-3 rounded-lg">
+            <div className="bg-[#f8fafc] bg-[#1e293b] p-3 rounded-lg">
               <ul className="space-y-1 text-sm">
                 {shop.businessHours.map((hours, index) => (
                   <li key={index} className="flex justify-between">
-                    <span className="font-medium text-[#0f172a] dark:text-white">{hours.day}</span>
-                    <span className="text-[#64748b] dark:text-[#94a3b8]">
+                    <span className="font-medium text-[#0f172a] text-white">{hours.day}</span>
+                    <span className="text-[#64748b] text-[#94a3b8]">
                       {hours.open === "휴무" ? "휴무" : `${hours.open} - ${hours.close}`}
                     </span>
                   </li>
@@ -291,10 +285,10 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
           </div>
 
           <div>
-            <h3 className="font-medium text-[#0f172a] dark:text-white text-sm mb-2 flex items-center">
+            <h3 className="font-medium text-[#0f172a] text-white text-sm mb-2 flex items-center">
               <MapPin className="h-4 w-4 mr-1" /> 위치 정보
             </h3>
-            <div className="bg-[#f8fafc] dark:bg-[#1e293b] p-0 rounded-lg overflow-hidden">
+            <div className="bg-[#f8fafc] bg-[#1e293b] p-0 rounded-lg overflow-hidden">
               <iframe
                 src={shop.mapUrl}
                 width="100%"
@@ -310,6 +304,17 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* 큰 구독 버튼 (하단에 고정) */}
+      <div className="fixed bottom-20 left-0 right-0 p-4 max-w-md mx-auto">
+        <SubscriptionButton 
+          userId="user-1" // 실제 구현에서는 인증된 사용자 ID
+          shopId={shop.id}
+          shopName={shop.name}
+          variant="default"
+          size="lg"
+        />
+      </div>
     </div>
   );
 } 

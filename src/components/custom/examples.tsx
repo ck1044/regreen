@@ -114,7 +114,7 @@ export const NotificationItemExample = () => {
   };
   
   return (
-    <div className="border border-[#e1e7ef] dark:border-[#303642] rounded-lg overflow-hidden">
+    <div className="border border-[#e1e7ef] border-[#303642] rounded-lg overflow-hidden">
       <NotificationItem
         id="1"
         type="reservation_confirmed"
@@ -219,10 +219,10 @@ export const MobileModalExample = () => {
           />
         }
       >
-        <p className="text-[#0f172a] dark:text-white">
+        <p className="text-[#0f172a] text-white">
           정말로 이 예약을 확정하시겠습니까?
         </p>
-        <p className="text-sm text-[#64748b] dark:text-[#94a3b8] mt-2">
+        <p className="text-sm text-[#64748b] text-[#94a3b8] mt-2">
           확정 후에는 취소가 어려울 수 있습니다.
         </p>
       </MobileModal>
@@ -236,26 +236,26 @@ export const MobileModalExample = () => {
       >
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-[#0f172a] dark:text-white">
+            <label className="text-sm font-medium text-[#0f172a] text-white">
               정렬 방식
             </label>
             <div className="mt-2 space-y-2">
               <div className="flex items-center">
                 <input type="radio" id="sort-distance" name="sort" className="mr-2" />
-                <label htmlFor="sort-distance" className="text-sm text-[#0f172a] dark:text-white">
+                <label htmlFor="sort-distance" className="text-sm text-[#0f172a] text-white">
                   거리순
                 </label>
               </div>
               <div className="flex items-center">
                 <input type="radio" id="sort-rating" name="sort" className="mr-2" />
-                <label htmlFor="sort-rating" className="text-sm text-[#0f172a] dark:text-white">
+                <label htmlFor="sort-rating" className="text-sm text-[#0f172a] text-white">
                   평점순
                 </label>
               </div>
             </div>
           </div>
           
-          <div className="pt-4 border-t border-[#e1e7ef] dark:border-[#303642]">
+          <div className="pt-4 border-t border-[#e1e7ef] border-[#303642]">
             <Button className="w-full" onClick={() => setIsBottomSheetOpen(false)}>
               필터 적용하기
             </Button>

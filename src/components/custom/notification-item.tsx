@@ -56,7 +56,7 @@ const NotificationItem = ({
 
   // 읽음 상태에 따른 배경색 설정
   const getBgColor = () => {
-    return isRead ? "" : "bg-blue-50 dark:bg-blue-900/20";
+    return isRead ? "" : "bg-blue-50 bg-blue-900/20";
   };
   
   // 컨테이너 클릭 핸들러
@@ -69,26 +69,26 @@ const NotificationItem = ({
   const content = (
     <div
       className={cn(
-        "p-4 border-b border-[#e1e7ef] dark:border-[#303642] transition-colors",
+        "p-4 border-b border-[#e1e7ef] border-[#303642] transition-colors",
         getBgColor(),
         className
       )}
       onClick={handleClick}
     >
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-[#f1f5f9] dark:bg-[#334155] flex items-center justify-center">
+        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-[#f1f5f9] bg-[#334155] flex items-center justify-center">
           {getIcon()}
         </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium text-[#0f172a] dark:text-white text-sm">{title}</h3>
-            <span className="text-xs text-[#64748b] dark:text-[#94a3b8] whitespace-nowrap ml-2">
+            <h3 className="font-medium text-[#0f172a] text-white text-sm">{title}</h3>
+            <span className="text-xs text-[#64748b] text-[#94a3b8] whitespace-nowrap ml-2">
               {time}
             </span>
           </div>
           
-          <p className="text-sm text-[#64748b] dark:text-[#94a3b8] mt-1 line-clamp-2">
+          <p className="text-sm text-[#64748b] text-[#94a3b8] mt-1 line-clamp-2">
             {message}
           </p>
           

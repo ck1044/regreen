@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import { Home, Store, Calendar, Bell, User, BarChart3, Settings } from "lucide-react";
 
 type NavigationBarProps = {
@@ -17,7 +17,7 @@ type NavItem = {
 };
 
 const NavigationBar = ({ userRole }: NavigationBarProps) => {
-  const router = useRouter();
+  const pathname = usePathname();
 
   const navItems: NavItem[] = [
     {
@@ -70,10 +70,10 @@ const NavigationBar = ({ userRole }: NavigationBarProps) => {
   );
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-16 bg-[#ffffff] dark:bg-[#0f172a] border-t border-[#e1e7ef] dark:border-[#303642]">
+    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-16 bg-[#ffffff] bg-[#0f172a] border-t border-[#e1e7ef] border-[#303642]">
       <ul className="flex h-full justify-around items-center">
         {filteredNavItems.map((item) => {
-          const isActive = router.pathname === item.href || router.pathname.startsWith(`${item.href}/`);
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           
           return (
             <li key={item.href} className="flex-1">
@@ -82,7 +82,7 @@ const NavigationBar = ({ userRole }: NavigationBarProps) => {
                 className={`flex flex-col items-center justify-center h-full ${
                   isActive 
                     ? "text-[#5DCA69]" 
-                    : "text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#ffffff]"
+                    : "text-[#64748b] hover:text-[#0f172a] hover:text-[#ffffff]"
                 }`}
               >
                 {item.icon}
@@ -96,4 +96,4 @@ const NavigationBar = ({ userRole }: NavigationBarProps) => {
   );
 };
 
-export default NavigationBar; 
+export default NavigationBar;

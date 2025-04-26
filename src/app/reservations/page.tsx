@@ -1,8 +1,12 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import MobileLayout from "@/components/layout/MobileLayout"
 import ReservationList, { ReservationItem } from "@/components/custom/reservation-list";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // 샘플 예약 데이터 - 실제로는 API에서 가져올 것입니다
 const sampleReservations: ReservationItem[] = [
@@ -52,41 +56,36 @@ const sampleReservations: ReservationItem[] = [
   }
 ];
 
-export default async function ReservationsPage() {
-  // 세션 확인
-  const session = await getServerSession(authOptions);
-  
-  // 로그인되지 않은 경우 로그인 페이지로 리디렉션
-  if (!session) {
-    redirect('/auth/signin');
-  }
-  
-  // 실제 구현에서는 여기서 API를 호출하여 사용자의 예약 목록을 가져옵니다
-  // const reservations = await fetch(`/api/reservations?userId=${session.user.id}`).then(res => res.json());
-  
-  // 지금은 샘플 데이터를 사용합니다
-  const reservations = sampleReservations;
-  
-  const handleViewDetail = (id: string) => {
-    // 예약 상세 페이지로 이동하는 로직 (클라이언트 컴포넌트에서 처리해야 함)
-    console.log(`View detail for reservation ${id}`);
-  };
-  
-  const handleCancel = (id: string) => {
-    // 예약 취소 로직 (클라이언트 컴포넌트에서 처리해야 함)
-    console.log(`Cancel reservation ${id}`);
-  };
+export default function ReservationsPage() {
+  const router = useRouter();
 
-  return (
-    <MobileLayout>
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">내 예약 목록</h1>
-        <ReservationList
-          reservations={reservations}
-          onViewDetail={handleViewDetail}
-          onCancel={handleCancel}
-        />
-      </div>
-    </MobileLayout>
-  );
+  useEffect(() => {
+    // 로그인 상태에 따라 적절한 페이지로 리디렉션
+    // 로그인한 사용자의 역할(role)에 따라 분기 처리
+    // 예: 사장님이면 /owner/reservations로, 일반 사용자면 /my-reservations로 리디렉션
+    
+    // 임시로 모든 사용자를 /my-reservations로 리디렉션
+    router.push("/my-reservations");
+    
+    // 실제 구현 예시:
+    // const checkUserRole = async () => {
+    //   try {
+    //     const response = await fetch("/api/auth/me");
+    //     const data = await response.json();
+    //     
+    //     if (data.role === "owner") {
+    //       router.push("/owner/reservations");
+    //     } else {
+    //       router.push("/my-reservations");
+    //     }
+    //   } catch (error) {
+    //     // 로그인되지 않은 경우 로그인 페이지로 리디렉션
+    //     router.push("/auth/signin");
+    //   }
+    // };
+    // 
+    // checkUserRole();
+  }, [router]);
+
+  return null; // 리디렉션 중에는 아무것도 렌더링하지 않음
 } 

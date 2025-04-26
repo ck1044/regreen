@@ -97,7 +97,7 @@ export default function ReservePage({ params }: { params: { id: string } }) {
     return (
       <div className="flex flex-col items-center justify-center p-6 min-h-[50vh]">
         <h1 className="text-xl font-bold mb-2">상품을 찾을 수 없습니다</h1>
-        <p className="text-[#64748b] dark:text-[#94a3b8] mb-4">요청하신 상품 정보가 존재하지 않습니다.</p>
+        <p className="text-[#64748b] mb-4">요청하신 상품 정보가 존재하지 않습니다.</p>
         <Link href="/">
           <Button>홈으로 돌아가기</Button>
         </Link>
@@ -116,12 +116,12 @@ export default function ReservePage({ params }: { params: { id: string } }) {
   return (
     <div className="pb-16">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-[#0f172a] border-b border-[#e1e7ef] dark:border-[#303642]">
+      <div className="sticky top-0 z-10 bg-white bg-[#0f172aw] border-b border-[#e1e7ef] border-[#303642]">
         <div className="flex items-center h-14 px-4">
           <Link href={`/shops/${item.shopId}`} className="mr-4">
-            <ChevronLeft className="h-6 w-6 text-[#0f172a] dark:text-white" />
+            <ChevronLeft className="h-6 w-6 text-[#0f172a] text-white" />
           </Link>
-          <h1 className="text-lg font-semibold text-[#0f172a] dark:text-white">예약하기</h1>
+          <h1 className="text-lg font-semibold text-[#0f172a] text-white">예약하기</h1>
         </div>
       </div>
 
@@ -138,17 +138,17 @@ export default function ReservePage({ params }: { params: { id: string } }) {
           </div>
           <div className="ml-3 flex flex-col justify-between">
             <div>
-              <h2 className="font-medium text-[#0f172a] dark:text-white">{item.name}</h2>
-              <Link href={`/shops/${item.shopId}`} className="text-sm text-[#64748b] dark:text-[#94a3b8] flex items-center mt-1">
+              <h2 className="font-medium text-[#0f172a] text-white">{item.name}</h2>
+              <Link href={`/shops/${item.shopId}`} className="text-sm text-[#64748b] text-[#94a3b8] flex items-center mt-1">
                 <Store size={14} className="mr-1" />
                 {item.shopName}
               </Link>
             </div>
             <div className="flex items-center">
-              <span className="line-through text-[#64748b] dark:text-[#94a3b8] text-xs mr-1">
+              <span className="line-through text-[#64748b] text-[#94a3b8] text-xs mr-1">
                 {item.originalPrice.toLocaleString()}원
               </span>
-              <span className="font-medium text-[#0f172a] dark:text-white">
+              <span className="font-medium text-[#0f172a] text-white">
                 {item.discountPrice.toLocaleString()}원
               </span>
               <span className="ml-2 text-xs font-bold text-[#5DCA69] bg-[#5DCA69]/10 px-1.5 py-0.5 rounded">
@@ -158,61 +158,61 @@ export default function ReservePage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        <div className="text-sm text-[#0f172a] dark:text-white mb-4">
+        <div className="text-sm text-[#0f172a] text-white mb-4">
           {item.description}
         </div>
 
-        <div className="bg-[#f8fafc] dark:bg-[#1e293b] p-3 rounded-lg mb-4">
+        <div className="bg-[#f8fafc] bg-[#1e293b] p-3 rounded-lg mb-4">
           <div className="flex items-start mb-2">
-            <Calendar size={16} className="text-[#64748b] dark:text-[#94a3b8] mr-2 mt-0.5" />
+            <Calendar size={16} className="text-[#64748b] text-[#94a3b8] mr-2 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-[#0f172a] dark:text-white">픽업 날짜</p>
-              <p className="text-sm text-[#64748b] dark:text-[#94a3b8]">{formattedDate}</p>
+              <p className="text-sm font-medium text-[#0f172a] text-white">픽업 날짜</p>
+              <p className="text-sm text-[#64748b] text-[#94a3b8]">{formattedDate}</p>
             </div>
           </div>
           <div className="flex items-start">
-            <Clock size={16} className="text-[#64748b] dark:text-[#94a3b8] mr-2 mt-0.5" />
+            <Clock size={16} className="text-[#64748b] text-[#94a3b8] mr-2 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-[#0f172a] dark:text-white">픽업 가능 시간</p>
-              <p className="text-sm text-[#64748b] dark:text-[#94a3b8]">{item.pickupTime.start} - {item.pickupTime.end}</p>
+              <p className="text-sm font-medium text-[#0f172a] text-white">픽업 가능 시간</p>
+              <p className="text-sm text-[#64748b] text-[#94a3b8]">{item.pickupTime.start} - {item.pickupTime.end}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* 예약 폼 */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-[#e1e7ef] dark:border-[#303642]">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-[#e1e7ef] border-[#303642]">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-[#0f172a] dark:text-white mb-1">
+          <label className="block text-sm font-medium text-[#0f172a] text-white mb-1">
             수량
           </label>
           <div className="flex items-center">
             <button
               type="button"
               onClick={decreaseQuantity}
-              className="w-10 h-10 border border-[#e1e7ef] dark:border-[#303642] rounded-l-lg flex items-center justify-center text-[#64748b] dark:text-[#94a3b8]"
+              className="w-10 h-10 border border-[#e1e7ef] border-[#303642] rounded-l-lg flex items-center justify-center text-[#64748b] text-[#94a3b8]"
             >
               <Minus size={16} />
             </button>
-            <div className="w-12 h-10 border-t border-b border-[#e1e7ef] dark:border-[#303642] flex items-center justify-center font-medium text-[#0f172a] dark:text-white">
+            <div className="w-12 h-10 border-t border-b border-[#e1e7ef] border-[#303642] flex items-center justify-center font-medium text-[#0f172a] text-white">
               {quantity}
             </div>
             <button
               type="button"
               onClick={increaseQuantity}
-              className="w-10 h-10 border border-[#e1e7ef] dark:border-[#303642] rounded-r-lg flex items-center justify-center text-[#64748b] dark:text-[#94a3b8]"
+              className="w-10 h-10 border border-[#e1e7ef] border-[#303642] rounded-r-lg flex items-center justify-center text-[#64748b] text-[#94a3b8]"
               disabled={quantity >= item.quantity}
             >
               <Plus size={16} />
             </button>
-            <span className="ml-3 text-sm text-[#64748b] dark:text-[#94a3b8]">
+            <span className="ml-3 text-sm text-[#64748b] text-[#94a3b8]">
               남은 수량: {item.quantity}개
             </span>
           </div>
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-[#0f172a] dark:text-white mb-1">
+          <label className="block text-sm font-medium text-[#0f172a] text-white mb-1">
             픽업 예정 시간
           </label>
           <Input 
@@ -224,14 +224,14 @@ export default function ReservePage({ params }: { params: { id: string } }) {
             required
             className="w-full"
           />
-          <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1 flex items-center">
+          <p className="text-xs text-[#64748b] text-[#94a3b8] mt-1 flex items-center">
             <Info size={12} className="mr-1" />
             픽업 가능 시간 내에서 선택해주세요.
           </p>
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-[#0f172a] dark:text-white mb-1">
+          <label className="block text-sm font-medium text-[#0f172a] text-white mb-1">
             요청사항 (선택)
           </label>
           <Textarea
@@ -242,21 +242,21 @@ export default function ReservePage({ params }: { params: { id: string } }) {
           />
         </div>
 
-        <div className="border-t border-[#e1e7ef] dark:border-[#303642] pt-4 mb-4">
+        <div className="border-t border-[#e1e7ef] border-[#303642] pt-4 mb-4">
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-[#64748b] dark:text-[#94a3b8]">상품 금액</span>
-            <span className="text-[#0f172a] dark:text-white">{item.originalPrice.toLocaleString()}원</span>
+            <span className="text-[#64748b] text-[#94a3b8]">상품 금액</span>
+            <span className="text-[#0f172a] text-white">{item.originalPrice.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-[#64748b] dark:text-[#94a3b8]">할인 금액</span>
+            <span className="text-[#64748b] text-[#94a3b8]">할인 금액</span>
             <span className="text-[#5DCA69]">- {(item.originalPrice - item.discountPrice).toLocaleString()}원</span>
           </div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-[#64748b] dark:text-[#94a3b8]">수량</span>
-            <span className="text-[#0f172a] dark:text-white">{quantity}개</span>
+            <span className="text-[#64748b] text-[#94a3b8]">수량</span>
+            <span className="text-[#0f172a] text-white">{quantity}개</span>
           </div>
-          <div className="flex justify-between font-medium mt-2 pt-2 border-t border-dashed border-[#e1e7ef] dark:border-[#303642]">
-            <span className="text-[#0f172a] dark:text-white">총 결제 금액</span>
+          <div className="flex justify-between font-medium mt-2 pt-2 border-t border-dashed border-[#e1e7ef] border-[#303642]">
+            <span className="text-[#0f172a] text-white">총 결제 금액</span>
             <span className="text-lg text-[#5DCA69]">{totalPrice.toLocaleString()}원</span>
           </div>
         </div>

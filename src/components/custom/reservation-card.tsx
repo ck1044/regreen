@@ -62,45 +62,45 @@ const ReservationCard = ({
 
   return (
     <div className={cn(
-      "bg-white dark:bg-[#1e293b] rounded-lg shadow overflow-hidden",
+      "bg-white bg-[#1e293b] rounded-lg shadow overflow-hidden",
       className
     )}>
       <div className="p-4">
         <div className="flex justify-between items-start mb-3">
           <Link href={`/shops/${shopId}`} className="hover:underline">
-            <h3 className="font-medium text-[#0f172a] dark:text-white">{shopName}</h3>
+            <h3 className="font-medium text-[#0f172a] text-white">{shopName}</h3>
           </Link>
           {getStatusBadge()}
         </div>
         
         <div className="space-y-2 mb-3">
-          <div className="flex items-center text-sm text-[#64748b] dark:text-[#94a3b8]">
+          <div className="flex items-center text-sm text-[#64748b] text-[#94a3b8]">
             <MapPin size={14} className="mr-2" />
             <span>{location}</span>
           </div>
-          <div className="flex items-center text-sm text-[#64748b] dark:text-[#94a3b8]">
+          <div className="flex items-center text-sm text-[#64748b] text-[#94a3b8]">
             <CalendarClock size={14} className="mr-2" />
             <span>{date} {time}</span>
           </div>
         </div>
         
         {items.length > 0 && (
-          <div className="border-t border-[#e1e7ef] dark:border-[#303642] pt-3 mb-3">
-            <h4 className="text-sm font-medium text-[#0f172a] dark:text-white mb-2">주문 항목</h4>
+          <div className="border-t border-[#e1e7ef] border-[#303642] pt-3 mb-3">
+            <h4 className="text-sm font-medium text-[#0f172a] text-white mb-2">주문 항목</h4>
             <ul className="space-y-1">
               {items.map((item) => (
                 <li key={item.id} className="text-sm flex justify-between">
-                  <span className="text-[#0f172a] dark:text-white">
+                  <span className="text-[#0f172a] text-white">
                     {item.name} x {item.quantity}
                   </span>
-                  <span className="text-[#64748b] dark:text-[#94a3b8]">
+                  <span className="text-[#64748b] text-[#94a3b8]">
                     {formatPrice(item.price * item.quantity)}
                   </span>
                 </li>
               ))}
             </ul>
-            <div className="flex justify-between font-medium mt-2 pt-2 border-t border-dashed border-[#e1e7ef] dark:border-[#303642]">
-              <span className="text-[#0f172a] dark:text-white">총액</span>
+            <div className="flex justify-between font-medium mt-2 pt-2 border-t border-dashed border-[#e1e7ef] border-[#303642]">
+              <span className="text-[#0f172a] text-white">총액</span>
               <span className="text-[#5DCA69]">{formatPrice(totalAmount)}</span>
             </div>
           </div>

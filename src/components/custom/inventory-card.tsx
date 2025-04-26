@@ -39,15 +39,15 @@ const InventoryCard = ({
 
   // 재고 수량 상태에 따른 색상 설정
   const getQuantityColor = () => {
-    if (quantity <= 3) return "text-red-500 dark:text-red-400";
-    if (quantity <= 10) return "text-yellow-500 dark:text-yellow-400";
-    return "text-[#64748b] dark:text-[#94a3b8]";
+    if (quantity <= 3) return "text-red-500 text-red-400";
+    if (quantity <= 10) return "text-yellow-500 text-yellow-400";
+    return "text-[#64748b] text-[#94a3b8]";
   };
 
   return (
     <Link href={`/inventory/${id}`}>
       <div className={cn(
-        "flex bg-white dark:bg-[#1e293b] rounded-lg shadow overflow-hidden transition-all hover:shadow-md",
+        "flex bg-white bg-[#1e293b] rounded-lg shadow overflow-hidden transition-all hover:shadow-md",
         className
       )}>
         <div className="relative w-24 h-24 flex-shrink-0">
@@ -61,14 +61,14 @@ const InventoryCard = ({
         </div>
         <div className="p-3 flex-1">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium text-[#0f172a] dark:text-white text-sm line-clamp-1">{name}</h3>
+            <h3 className="font-medium text-[#0f172a] text-white text-sm line-clamp-1">{name}</h3>
             <Badge variant="outline" className="bg-[#5DCA69]/10 text-[#5DCA69] border-[#5DCA69]/20 ml-1">
               {discountRate}% 할인
             </Badge>
           </div>
           
           <Link href={`/shops/${shopId}`} className="inline-block mt-1">
-            <div className="flex items-center text-xs text-[#64748b] dark:text-[#94a3b8]">
+            <div className="flex items-center text-xs text-[#64748b] text-[#94a3b8]">
               <Store size={12} className="mr-1" />
               <span className="line-clamp-1">{shopName}</span>
             </div>
@@ -76,8 +76,8 @@ const InventoryCard = ({
           
           <div className="flex justify-between items-end mt-2">
             <div>
-              <p className="text-sm text-[#0f172a] dark:text-white font-medium">
-                <span className="line-through text-[#64748b] dark:text-[#94a3b8] mr-1 text-xs">
+              <p className="text-sm text-[#0f172a] text-white font-medium">
+                <span className="line-through text-[#64748b] text-[#94a3b8] mr-1 text-xs">
                   {formatPrice(originalPrice)}
                 </span>
                 {formatPrice(discountPrice)}
@@ -89,7 +89,7 @@ const InventoryCard = ({
           </div>
           
           {expiresAt && (
-            <div className="flex items-center mt-1 text-xs text-[#64748b] dark:text-[#94a3b8]">
+            <div className="flex items-center mt-1 text-xs text-[#64748b] text-[#94a3b8]">
               <Clock size={12} className="mr-1" />
               <span>{expiresAt}</span>
             </div>
