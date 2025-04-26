@@ -14,12 +14,12 @@ export default function RootPage() {
         </p>
         <div className="space-y-4">
           <Button asChild className="w-full">
-            <Link href="/auth/login">
+            <Link href="/auth/signin">
               로그인
             </Link>
           </Button>
           <Button asChild variant="outline" className="w-full">
-            <Link href="/auth/register">
+            <Link href="/auth/signup">
               회원가입
             </Link>
           </Button>
