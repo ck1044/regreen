@@ -8,7 +8,7 @@ import NotificationProvider from "@/components/notification/notification-provide
 
 type MobileLayoutProps = {
   children: ReactNode;
-  userId?: string;
+  userId?: string | null;
   isOwner?: boolean;
 };
 
@@ -42,7 +42,7 @@ const MobileLayout = ({
 
   // 알림 제공자 사용 여부에 따라 조건부 렌더링
   return shouldUseNotifications ? (
-    <NotificationProvider userId={userId}>
+    <NotificationProvider userId={userId as string}>
       {renderContent()}
     </NotificationProvider>
   ) : (

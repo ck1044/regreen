@@ -88,7 +88,7 @@ const NotificationProvider = ({ children, userId }: NotificationProviderProps) =
 
   // SSE 연결 설정
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || userId === "null" || userId === "undefined") return;
 
     // 이미 연결되어 있으면 중복 연결 방지
     if (eventSource) return;

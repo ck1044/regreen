@@ -49,7 +49,7 @@ const config = {
         },
         card: {
           DEFAULT: "#ffffff",
-          foreground: "#0f172a",
+          foreground: "#5DCA69",
         },
       },
       borderRadius: {

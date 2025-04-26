@@ -17,7 +17,7 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         {/* <AuthProvider> */}
-          <MobileLayout>
+          <MobileLayout userId={undefined}>
             {children}
           </MobileLayout>
         {/* </AuthProvider> */}
