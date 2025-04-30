@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { NotificationBell } from "@/components/notification";
 
@@ -27,20 +28,27 @@ const Header = ({ title, showBackButton = false, rightAction, isOwner = false }:
     router.back();
   };
 
+  const handleLogoClick = () => {
+    router.push("/main");
+  };
+
   return (
-    <header className="sticky top-0 z-10 h-14 flex items-center justify-between px-4 bg-[#ffffff] bg-[#0f172a] border-b border-[#e1e7ef] border-[#303642]">
+    <header className="sticky top-0 z-10 h-14 flex items-center justify-between px-4 bg-white border-b border-[#e1e7ef]">
       <div className="flex items-center">
         {showBackButton && (
           <button 
             onClick={handleBack}
-            className="mr-2 p-1 rounded-full hover:bg-[#f1f5f9] "
+            className="mr-2 p-1 rounded-full hover:bg-gray-100"
           >
-            <ArrowLeft size={20} className="text-[#0f172a] text-[#ffffff]" />
+            <ArrowLeft size={20} className="text-gray-600" />
           </button>
         )}
-        <h1 className="text-lg font-semibold text-[#0f172a] text-[#ffffff]">
-          {getTitle()}
-        </h1>
+        <div className="flex items-center cursor-pointer" onClick={handleLogoClick}>
+          <Image src="/logo.png" alt="RE-GREEN" width={32} height={32} className="mr-2" />
+          <h1 className="text-lg font-semibold text-gray-900">
+            {getTitle()}
+          </h1>
+        </div>
       </div>
       
       <div className="flex items-center gap-2">

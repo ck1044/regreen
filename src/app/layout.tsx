@@ -5,7 +5,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 
 export const metadata: Metadata = {
   title: "리그린",
-  description: "모바일 웹앱",
+  description: "리그린 프로젝트",
 };
 
 export default function RootLayout({

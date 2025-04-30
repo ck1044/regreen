@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 type InventoryCardProps = {
   id: string;
@@ -11,9 +10,7 @@ type InventoryCardProps = {
   image: string;
   shopName: string;
   shopId: string;
-  originalPrice: number;
-  discountPrice: number;
-  discountRate: number;
+  price: number;
   quantity: number;
   expiresAt?: string;
   className?: string;
@@ -25,9 +22,7 @@ const InventoryCard = ({
   image,
   shopName,
   shopId,
-  originalPrice,
-  discountPrice,
-  discountRate,
+  price,
   quantity,
   expiresAt,
   className,
@@ -39,18 +34,18 @@ const InventoryCard = ({
 
   // 재고 수량 상태에 따른 색상 설정
   const getQuantityColor = () => {
-    if (quantity <= 3) return "text-red-500 text-red-400";
-    if (quantity <= 10) return "text-yellow-500 text-yellow-400";
-    return "text-[#64748b] text-[#94a3b8]";
+    if (quantity <= 3) return "text-red-500";
+    if (quantity <= 10) return "text-yellow-500";
+    return "text-[#64748b]";
   };
 
   return (
     <Link href={`/inventory/${id}`}>
       <div className={cn(
-        "flex bg-white bg-[#1e293b] rounded-lg shadow overflow-hidden transition-all hover:shadow-md",
+        "flex m-4 bg-white rounded-lg shadow overflow-hidden transition-all hover:shadow-md hover:translate-y-[-4px]",
         className
       )}>
-        <div className="relative w-24 h-24 flex-shrink-0">
+        <div className="relative w-24 h-30 flex-shrink-0">
           <Image
             src={image}
             alt={name}
@@ -60,27 +55,17 @@ const InventoryCard = ({
           />
         </div>
         <div className="p-3 flex-1">
-          <div className="flex justify-between items-start">
-            <h3 className="font-medium text-[#0f172a] text-white text-sm line-clamp-1">{name}</h3>
-            <Badge variant="outline" className="bg-[#5DCA69]/10 text-[#5DCA69] border-[#5DCA69]/20 ml-1">
-              {discountRate}% 할인
-            </Badge>
-          </div>
-          
-          <Link href={`/shops/${shopId}`} className="inline-block mt-1">
-            <div className="flex items-center text-xs text-[#64748b] text-[#94a3b8]">
+          <h3 className="font-medium text-[#0f172a] text-sm line-clamp-1 mb-1">{name}</h3>
+          <Link href={`/shops/${shopId}`} className="inline-block">
+            <div className="flex items-center text-xs text-[#64748b]">
               <Store size={12} className="mr-1" />
               <span className="line-clamp-1">{shopName}</span>
             </div>
-          </Link>
-          
+          </Link>          
           <div className="flex justify-between items-end mt-2">
             <div>
-              <p className="text-sm text-[#0f172a] text-white font-medium">
-                <span className="line-through text-[#64748b] text-[#94a3b8] mr-1 text-xs">
-                  {formatPrice(originalPrice)}
-                </span>
-                {formatPrice(discountPrice)}
+              <p className="text-sm text-[#0f172a] font-medium">
+                {formatPrice(price)}
               </p>
             </div>
             <span className={cn("text-xs", getQuantityColor())}>
@@ -89,7 +74,7 @@ const InventoryCard = ({
           </div>
           
           {expiresAt && (
-            <div className="flex items-center mt-1 text-xs text-[#64748b] text-[#94a3b8]">
+            <div className="flex items-center mt-1 text-xs text-[#64748b]">
               <Clock size={12} className="mr-1" />
               <span>{expiresAt}</span>
             </div>

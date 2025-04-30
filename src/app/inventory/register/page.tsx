@@ -5,28 +5,33 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ArrowLeft, Calendar, ImageIcon, Save, UploadCloud } from "lucide-react";
-import Link from "next/link";
+import { Calendar, ImageIcon, Save, UploadCloud } from "lucide-react";
 import Image from "next/image";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 // 재고 등록 폼 유효성 검사 스키마
 const inventoryFormSchema = z.object({
   name: z.string().min(2, { message: "상품명은 최소 2자 이상이어야 합니다" }),
   description: z.string().min(10, { message: "설명은 최소 10자 이상이어야 합니다" }),
-  originalPrice: z.coerce.number().min(0, { message: "원가는 0 이상이어야 합니다" }),
-  discountedPrice: z.coerce.number().min(0, { message: "할인가는 0 이상이어야 합니다" }).optional(),
+  price: z.string().min(1, { message: "가격을 선택해주세요" }),
   quantity: z.coerce.number().int().min(0, { message: "수량은 0 이상이어야 합니다" }),
-  expiryDate: z.string().optional(),
   // 이미지는 프론트엔드에서만 관리하고 API 호출 시 FormData로 전송할 예정
 });
 
 type InventoryFormValues = z.infer<typeof inventoryFormSchema>;
+
+// 가격 구간 설정
+const priceOptions = [
+  "3900", "4900", "5900", "6900", "7900", "8900", "9900", 
+  "10900", "11900", "12900", "13900", "14900", "15900", 
+  "16900", "17900", "18900", "19900"
+];
 
 export default function InventoryRegisterPage() {
   const router = useRouter();
@@ -39,10 +44,8 @@ export default function InventoryRegisterPage() {
     defaultValues: {
       name: "",
       description: "",
-      originalPrice: 0,
-      discountedPrice: 0,
+      price: "",
       quantity: 0,
-      expiryDate: "",
     },
   });
 
@@ -91,24 +94,21 @@ export default function InventoryRegisterPage() {
   };
 
   return (
-    <MobileLayout>
+    <div>
       <div className="container max-w-xl mx-auto p-4 pb-20">
         <div className="flex items-center mb-6">
-          <Link href="/inventory" className="mr-4">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
           <h1 className="text-2xl font-bold">재고 등록</h1>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-2">
                 <div className="space-y-4">
                   {/* 상품 이미지 업로드 */}
                   <div className="mb-6">
                     <FormLabel className="block mb-2">상품 이미지</FormLabel>
-                    <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-gray-50 bg-gray-800 mb-2">
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-gray-50 mb-2">
                       {imagePreview ? (
                         <div className="relative w-full h-40 mb-4">
                           <Image 
@@ -134,7 +134,7 @@ export default function InventoryRegisterPage() {
                           onChange={handleImageUpload}
                         />
                       </label>
-                      <FormDescription className="text-center mt-2">
+                      <FormDescription className="text-center text-xs mt-2">
                         PNG, JPG, GIF 최대 5MB
                       </FormDescription>
                     </div>
@@ -174,34 +174,27 @@ export default function InventoryRegisterPage() {
                     )}
                   />
 
-                  {/* 원가 */}
+                  {/* 가격 선택 드롭다운 */}
                   <FormField
                     control={form.control}
-                    name="originalPrice"
+                    name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>원가 (원)</FormLabel>
+                        <FormLabel>가격 (원)</FormLabel>
                         <FormControl>
-                          <Input type="number" min="0" {...field} />
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="가격을 선택하세요" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {priceOptions.map((price) => (
+                                <SelectItem key={price} value={price}>
+                                  {price}원
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* 할인가 */}
-                  <FormField
-                    control={form.control}
-                    name="discountedPrice"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>할인가 (원)</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          할인을 적용하지 않을 경우 비워두세요
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -221,40 +214,17 @@ export default function InventoryRegisterPage() {
                       </FormItem>
                     )}
                   />
-
-                  {/* 유통기한 */}
-                  <FormField
-                    control={form.control}
-                    name="expiryDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>유통기한</FormLabel>
-                        <div className="flex items-center gap-2">
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <FormDescription>
-                          유통기한이 없는 상품은 비워두세요
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <Button type="submit" className="w-full mt-4 bg-[#5DCA69] hover:bg-[#4db058]">
+                <Save className="h-4 w-4 mr-2" />
+                제품 등록하기
+              </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="sticky bottom-16 bg-white bg-[#0f172a] p-4 shadow-lg border-t left-0 right-0">
-              <Button type="submit" className="w-full bg-[#5DCA69] hover:bg-[#4db058]">
-                <Save className="h-4 w-4 mr-2" />
-                제품 등록하기
-              </Button>
-            </div>
           </form>
         </Form>
       </div>
-    </MobileLayout>
+    </div>
   );
 } 
