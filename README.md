@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 리그린 (RE-GREEN)
 
-## Getting Started
+RE-GREEN은 음식물 쓰레기를 줄이고 지속 가능한 소비를 촉진하기 위한 웹 애플리케이션입니다. 상점들이 폐기 예정인 상품을 할인된 가격에 등록하고, 소비자들이 이를 구매할 수 있게 함으로써 환경 보호에 기여합니다.
 
-First, run the development server:
+## 기술 스택
+
+- **프론트엔드**: Next.js 15 (App Router), React, TypeScript
+- **스타일링**: Tailwind CSS, shadcn/ui
+- **상태 관리**: React Context API
+- **데이터베이스**: (구현 중 - MySQL 또는 PostgreSQL 예정)
+- **ORM**: (구현 중 - Drizzle ORM 예정)
+- **인증**: (구현 중)
+- **배포**: Vercel
+
+## 주요 기능
+
+- 사용자 인증 (로그인/회원가입)
+- 상점 및 상품 목록 보기
+- 상품 예약 및 결제 처리
+- 실시간 알림 시스템 (SSE 기반)
+- 인벤토리 관리 (상점 주인용)
+- 예약 관리
+- 환경 영향 측정 및 표시
+
+## 시작하기
+
+### 필수 조건
+
+- Node.js 18.0.0 이상
+- npm 또는 yarn
+
+### 설치
 
 ```bash
+# 패키지 설치
+npm install
+# 또는
+yarn install
+
+# 개발 서버 실행
 npm run dev
-# or
+# 또는
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 프로젝트 구조
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+├── app/                  # 페이지 및 라우트
+│   ├── api/              # API 엔드포인트
+│   ├── auth/             # 인증 관련 페이지
+│   ├── admin/            # 관리자 페이지
+│   ├── inventory/        # 인벤토리 관련 페이지
+│   ├── main/             # 메인 페이지
+│   ├── reservations/     # 예약 관련 페이지
+│   ├── shops/            # 상점 관련 페이지
+│   └── profile/          # 프로필 관련 페이지
+├── components/           # 재사용 가능한 컴포넌트
+│   ├── custom/           # 프로젝트 전용 컴포넌트
+│   ├── layout/           # 레이아웃 컴포넌트
+│   ├── ui/               # UI 컴포넌트 (shadcn/ui)
+│   └── notification/     # 알림 관련 컴포넌트
+├── hooks/                # 커스텀 훅
+├── lib/                  # 유틸리티 함수
+└── types/                # 타입 정의
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 문서
 
-## Learn More
+더 자세한 정보는 다음 문서들을 참조하세요:
 
-To learn more about Next.js, take a look at the following resources:
+- [인증 시스템](./docs/auth.md)
+- [알림 시스템](./docs/notifications.md)
+- [인벤토리 관리](./docs/inventory.md)
+- [예약 시스템](./docs/reservations.md)
+- [컴포넌트 구조](./docs/components.md)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 기여 방법
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. 이 저장소를 포크합니다. 
+2. 기능 브랜치를 생성합니다 (`git checkout -b feature/yourBranch`).
+3. 변경 사항을 커밋합니다 (`git commit -m 'Add sth'`).
+4. 브랜치에 푸시합니다 (`git push origin feature/yourBranch`).
+5. Pull Request를 열어 주세요.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
