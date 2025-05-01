@@ -45,25 +45,7 @@ yarn dev
 
 ## 프로젝트 구조
 
-```
-src/
-├── app/                  # 페이지 및 라우트
-│   ├── api/              # API 엔드포인트
-│   ├── auth/             # 인증 관련 페이지
-│   ├── admin/            # 관리자 페이지
-│   ├── inventory/        # 인벤토리 관련 페이지
-│   ├── main/             # 메인 페이지
-│   ├── reservations/     # 예약 관련 페이지
-│   ├── shops/            # 상점 관련 페이지
-│   └── profile/          # 프로필 관련 페이지
-├── components/           # 재사용 가능한 컴포넌트
-│   ├── custom/           # 프로젝트 전용 컴포넌트
-│   ├── layout/           # 레이아웃 컴포넌트
-│   ├── ui/               # UI 컴포넌트 (shadcn/ui)
-│   └── notification/     # 알림 관련 컴포넌트
-├── hooks/                # 커스텀 훅
-├── lib/                  # 유틸리티 함수
-└── types/                # 타입 정의
+
 ```
 
 ## 문서
