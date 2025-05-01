@@ -40,8 +40,10 @@ export const users = pgTable("users", {
   name: varchar("name", { length: 100 }).notNull(),
   phone: varchar("phone", { length: 20 }).notNull(),
   role: userRoleEnum("role").notNull().default("CUSTOMER"),
+  //role ENUM('USER', 'ADMIN', 'STORE_OWNER') DEFAULT 'USER',
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 // 매장 테이블
@@ -53,13 +55,15 @@ export const stores = pgTable("stores", {
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
   address: varchar("address", { length: 255 }).notNull(),
-  latitude: decimal("latitude", { precision: 10, scale: 6 }),
-  longitude: decimal("longitude", { precision: 10, scale: 6 }),
+  contact: varchar("contact", { length: 20 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
   businessHours: json("business_hours").$type<Record<string, string>>(),
   pickupHours: json("pickup_hours").$type<Record<string, string>>(),
+  storeLink: varchar("store_link", { length: 255 }),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 // 재고 테이블
@@ -70,11 +74,9 @@ export const inventories = pgTable("inventories", {
     .references(() => stores.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
-  originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(),
-  discountedPrice: decimal("discounted_price", { precision: 10, scale: 2 }).notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   quantity: integer("quantity").notNull(),
   imageUrl: varchar("image_url", { length: 255 }),
-  expiryDate: timestamp("expiry_date").notNull(),
   isAvailable: boolean("is_available").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -115,40 +117,40 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// 구독 테이블
-export const subscriptions = pgTable("subscriptions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  storeId: uuid("store_id")
-    .notNull()
-    .references(() => stores.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// // 구독 테이블
+// export const subscriptions = pgTable("subscriptions", {
+//   id: uuid("id").primaryKey().defaultRandom(),
+//   userId: uuid("user_id")
+//     .notNull()
+//     .references(() => users.id, { onDelete: "cascade" }),
+//   storeId: uuid("store_id")
+//     .notNull()
+//     .references(() => stores.id, { onDelete: "cascade" }),
+//   createdAt: timestamp("created_at").defaultNow().notNull(),
+// });
 
 // 메시지 테이블
-export const messages = pgTable("messages", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  senderId: uuid("sender_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  receiverId: uuid("receiver_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  content: text("content").notNull(),
-  isRead: boolean("is_read").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// export const messages = pgTable("messages", {
+//   id: uuid("id").primaryKey().defaultRandom(),
+//   senderId: uuid("sender_id")
+//     .notNull()
+//     .references(() => users.id, { onDelete: "cascade" }),
+//   receiverId: uuid("receiver_id")
+//     .notNull()
+//     .references(() => users.id, { onDelete: "cascade" }),
+//   content: text("content").notNull(),
+//   isRead: boolean("is_read").default(false).notNull(),
+//   createdAt: timestamp("created_at").defaultNow().notNull(),
+// });
 
 // 관계 정의
 export const usersRelations = relations(users, ({ many }) => ({
   ownedStores: many(stores),
   reservations: many(reservations),
   notifications: many(notifications),
-  subscriptions: many(subscriptions),
-  sentMessages: many(messages, { relationName: "sender" }),
-  receivedMessages: many(messages, { relationName: "receiver" }),
+  // subscriptions: many(subscriptions),
+  // sentMessages: many(messages, { relationName: "sender" }),
+  // receivedMessages: many(messages, { relationName: "receiver" }),
 }));
 
 export const storesRelations = relations(stores, ({ one, many }) => ({
@@ -158,7 +160,7 @@ export const storesRelations = relations(stores, ({ one, many }) => ({
   }),
   inventories: many(inventories),
   reservations: many(reservations),
-  subscriptions: many(subscriptions),
+  // subscriptions: many(subscriptions),
 }));
 
 export const inventoriesRelations = relations(inventories, ({ one, many }) => ({
@@ -191,26 +193,26 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   }),
 }));
 
-export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
-  user: one(users, {
-    fields: [subscriptions.userId],
-    references: [users.id],
-  }),
-  store: one(stores, {
-    fields: [subscriptions.storeId],
-    references: [stores.id],
-  }),
-}));
+// export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+//   user: one(users, {
+//     fields: [subscriptions.userId],
+//     references: [users.id],
+//   }),
+//   store: one(stores, {
+//     fields: [subscriptions.storeId],
+//     references: [stores.id],
+//   }),
+// }));
 
-export const messagesRelations = relations(messages, ({ one }) => ({
-  sender: one(users, {
-    fields: [messages.senderId],
-    references: [users.id],
-    relationName: "sender",
-  }),
-  receiver: one(users, {
-    fields: [messages.receiverId],
-    references: [users.id],
-    relationName: "receiver",
-  }),
-})); 
+// export const messagesRelations = relations(messages, ({ one }) => ({
+//   sender: one(users, {
+//     fields: [messages.senderId],
+//     references: [users.id],
+//     relationName: "sender",
+//   }),
+//   receiver: one(users, {
+//     fields: [messages.receiverId],
+//     references: [users.id],
+//     relationName: "receiver",
+//   }),
+// })); 

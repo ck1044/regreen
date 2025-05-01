@@ -20,8 +20,8 @@ const MobileLayout = ({
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
   
-  // 로그인 화면이나 회원가입 화면에서는 헤더와 내비게이션 바를 표시하지 않음
-  const isAuthPage = pathname?.includes("/auth") || false;
+  // 로그인 화면이나 회원가입 화면, 인덱스 페이지에서는 헤더와 내비게이션 바를 표시하지 않음
+  const isAuthPage = pathname?.includes("/auth") || pathname === "/" || false;
   
   // 클라이언트 사이드 렌더링 확인
   useEffect(() => {

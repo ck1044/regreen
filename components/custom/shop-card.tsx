@@ -1,3 +1,4 @@
+<<<<<<< HEAD:components/custom/shop-card.tsx
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -73,4 +74,81 @@ const ShopCard = ({
   );
 };
 
+=======
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Star, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type ShopCardProps = {
+  id: string;
+  name: string;
+  image: string;
+  location: string;
+  rating: number;
+  category?: string;
+  distance?: string;
+  isNew?: boolean;
+  className?: string;
+};
+
+const ShopCard = ({
+  id,
+  name,
+  image,
+  location,
+  rating,
+  category,
+  distance,
+  isNew = false,
+  className,
+}: ShopCardProps) => {
+  return (
+    <Link href={`/shops/${id}`}>
+      <div className={cn(
+        "bg-white rounded-lg shadow overflow-hidden h-full transition-transform hover:translate-y-[-4px]",
+        className
+      )}>
+        <div className="relative h-32 w-full">
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+          {isNew && (
+            <div className="absolute top-2 left-2 bg-[#5DCA69] text-white text-xs px-2 py-1 rounded-full">
+              NEW
+            </div>
+          )}
+          {category && (
+            <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+              {category}
+            </div>
+          )}
+        </div>
+        <div className="p-3">
+          <h3 className="font-medium text-[#0f172a] text-sm line-clamp-1">{name}</h3>
+          <div className="flex justify-between items-center mt-1">
+            <div className="flex items-center text-xs text-[#64748b]">
+              <MapPin size={12} className="mr-1" />
+              <span className="line-clamp-1 mr-1">{location}</span>
+              {distance && (
+                <span className="text-[#5DCA69]">{distance}</span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center mt-1 text-xs">
+            <Star size={12} className="text-yellow-500 mr-1" />
+            <span className="font-medium text-[#0f172a]">{rating.toFixed(1)}</span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+>>>>>>> cb6d9317783f36cb79baa897bfe8c7f9596ba0ce:src/components/custom/shop-card.tsx
 export { ShopCard }; 
