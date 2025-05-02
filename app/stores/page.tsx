@@ -1,32 +1,77 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import MobileLayout from '@/components/layout/MobileLayout'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Store, Plus } from 'lucide-react'
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
+import { Store, Plus, Loader2 } from 'lucide-react'
+import { useSession } from "next-auth/react";
+import apiClient from "@/lib/api"; // API 클라이언트 임포트
 
-export default async function StoresPage() {
+export default function StoresPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [stores, setStores] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // 세션 확인
-  // const session = await getServerSession(authOptions);
-  
-  // 로그인되지 않은 경우 로그인 페이지로 리디렉션
-  // if (!session) {
-  //   redirect('/auth/signin');
-  // }
-
-  // 테스트를 위한 더미 세션 데이터
-  const session = {
-    user: {
-      id: 'test-user-id',
-      email: 'test@example.com',
-      name: '테스트 유저',
-      role: 'STORE_OWNER'
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push('/auth/signin');
     }
-  };
+  }, [status, router]);
 
-  // 실제 구현에서는 여기서 DB에서 사용자의 가게 목록을 가져옵니다
-  const userStores = []; // await db.stores.findMany({ where: { ownerId: session.user.id } })
+  // 가게 목록 가져오기
+  useEffect(() => {
+    const fetchStores = async () => {
+      if (status !== "authenticated") return;
+      
+      setIsLoading(true);
+      try {
+        // API 클라이언트를 사용하여 가게 목록 요청
+        const data = await apiClient.store.getAll();
+        setStores(data || []);
+      } catch (err) {
+        console.error('가게 목록 가져오기 오류:', err);
+        setError('가게 정보를 불러오는 중 오류가 발생했습니다');
+        setStores([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStores();
+  }, [status]);
+
+  // 로딩 중인 경우
+  if (status === "loading" || isLoading) {
+    return (
+      <MobileLayout>
+        <div className="container mx-auto p-4 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-primary" />
+            <p>가게 정보를 불러오는 중...</p>
+          </div>
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  // 오류가 발생한 경우
+  if (error) {
+    return (
+      <MobileLayout>
+        <div className="container mx-auto p-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4">
+            {error}
+          </div>
+          <Button onClick={() => window.location.reload()}>새로고침</Button>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout>
@@ -41,7 +86,7 @@ export default async function StoresPage() {
           </Link>
         </div>
 
-        {userStores.length === 0 ? (
+        {stores.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-6 min-h-[300px] bg-gray-50 bg-gray-800 rounded-lg">
             <Store className="h-12 w-12 text-gray-400 mb-4" />
             <p className="text-gray-500 text-gray-400 mb-4 text-center">
@@ -56,7 +101,24 @@ export default async function StoresPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* 가게 목록이 여기에 들어갑니다 */}
+            {stores.map((store: any) => (
+              <div key={store.id} className="p-4 border rounded-lg shadow-sm">
+                <h2 className="text-xl font-semibold">{store.name}</h2>
+                <p className="text-gray-500">{store.address}</p>
+                <div className="mt-4 flex justify-end">
+                  <Link href={`/stores/edit/${store.id}`}>
+                    <Button className="mr-2" variant="outline">
+                      편집
+                    </Button>
+                  </Link>
+                  <Link href={`/stores/manage/${store.id}`}>
+                    <Button className="bg-[#5DCA69] hover:bg-[#4db058]">
+                      관리
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

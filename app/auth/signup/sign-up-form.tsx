@@ -23,18 +23,19 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import apiClient from "@/lib/api"; // API 클라이언트 임포트
 
 // 회원가입 유효성 검사 스키마
 const signUpSchema = z.object({
   name: z.string().min(2, "이름은 최소 2자 이상이어야 합니다"),
   email: z.string().email("유효한 이메일 주소를 입력하세요"),
-  phone: z
+  phoneNumber: z // 필드명 변경 phone -> phoneNumber (API와 일치)
     .string()
     .min(10, "전화번호는 최소 10자 이상이어야 합니다")
     .regex(/^[0-9-]+$/, "유효한 전화번호 형식이 아닙니다"),
   password: z.string().min(6, "비밀번호는 최소 6자 이상이어야 합니다"),
   confirmPassword: z.string(),
-  role: z.enum(["CUSTOMER", "STORE_OWNER", "ADMIN"], {
+  role: z.enum(["CUSTOMER", "STORE_OWNER"], { // ADMIN 제거 (API 지원 역할만 포함)
     required_error: "역할을 선택해주세요",
   }),
 })
@@ -61,7 +62,7 @@ export default function SignUpForm() {
     defaultValues: {
       name: "",
       email: "",
-      phone: "",
+      phoneNumber: "", // 필드명 변경
       password: "",
       confirmPassword: "",
       role: "CUSTOMER",
@@ -71,7 +72,7 @@ export default function SignUpForm() {
   // 역할 선택 변경 처리
   const handleRoleChange = (value: string) => {
     setRole(value);
-    setValue("role", value as "CUSTOMER" | "STORE_OWNER" | "ADMIN");
+    setValue("role", value as "CUSTOMER" | "STORE_OWNER");
   };
 
   async function onSubmit(data: SignUpFormValues) {
@@ -79,25 +80,9 @@ export default function SignUpForm() {
     setError(null);
 
     try {
-      // 사용자 등록 API 호출
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          password: data.password,
-          role: data.role,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "회원가입 중 오류가 발생했습니다");
-      }
+      // API 클라이언트를 사용하여 회원가입 요청
+      const { confirmPassword, ...signupData } = data;
+      const result = await apiClient.auth.signup(signupData);
 
       // 회원가입 성공 후 자동 로그인
       const signInResult = await signIn("credentials", {
@@ -111,7 +96,7 @@ export default function SignUpForm() {
       }
 
       // 회원가입 성공 시 리디렉션
-      router.push("/");
+      router.push("/main");
     } catch (error: any) {
       setError(error.message || "회원가입 중 오류가 발생했습니다");
       console.error(error);
@@ -171,18 +156,18 @@ export default function SignUpForm() {
             <PhoneIcon className="h-5 w-5 text-gray-400" />
           </div>
           <Input
-            id="phone"
+            id="phoneNumber"
             type="tel"
             placeholder="전화번호"
             autoCapitalize="none"
             autoCorrect="off"
             disabled={isLoading}
             className="pl-10"
-            {...register("phone")}
+            {...register("phoneNumber")}
           />
         </div>
-        {errors.phone && (
-          <p className="text-sm font-medium text-destructive">{errors.phone.message}</p>
+        {errors.phoneNumber && (
+          <p className="text-sm font-medium text-destructive">{errors.phoneNumber.message}</p>
         )}
       </div>
 
@@ -242,7 +227,6 @@ export default function SignUpForm() {
             <SelectContent>
               <SelectItem value="CUSTOMER">일반 사용자</SelectItem>
               <SelectItem value="STORE_OWNER">가게 사장님</SelectItem>
-              <SelectItem value="ADMIN">관리자</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -261,10 +245,10 @@ export default function SignUpForm() {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            처리 중...
+            가입 중...
           </>
         ) : (
-          "회원가입"
+          "가입하기"
         )}
       </Button>
     </form>

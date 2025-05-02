@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import MobileLayout from "@/components/layout/MobileLayout";
+import AppWrapper from "@/components/layout/AppWrapper";
 // import AuthProvider from "@/components/auth/auth-provider";
 
 export const metadata: Metadata = {
@@ -17,9 +17,9 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         {/* <AuthProvider> */}
-          <MobileLayout userId={undefined}>
+          <AppWrapper>
             {children}
-          </MobileLayout>
+          </AppWrapper>
         {/* </AuthProvider> */}
       </body>
     </html>

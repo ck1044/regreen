@@ -1,35 +1,64 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import * as schema from "./schema";
-import { pgTable } from "drizzle-orm/pg-core";
-import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
-import { eq } from "drizzle-orm";
+// 데이터베이스는 사용하지 않고 API만 사용
+// MySQL 및 Drizzle 관련 설정, 로직은 모두 주석 처리
 
-// 개발 환경에서는 로컬 PostgreSQL 데이터베이스 사용
-// 환경 변수로 관리되어야 합니다(실제 환경에서는 .env 파일을 통해)
-const connectionString = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/regreen";
+// import { drizzle } from "drizzle-orm/mysql2";
+// import mysql from "mysql2/promise";
+// import * as schema from "./schema";
+// import { eq } from "drizzle-orm";
 
-// 클라이언트 정의
-const client = postgres(connectionString);
-export const db = drizzle(client, { schema });
+// MySQL 클라이언트 생성을 위한 함수 (주석 처리)
+// export const createConnection = async () => {
+//   // @ts-ignore: mysql2 타입 문제 무시
+//   const connection = await mysql.createConnection({
+//     host: "regreen.c7ieosiyc1x7.ap-northeast-2.rds.amazonaws.com",
+//     user: "root",
+//     password: "regreen123!",
+//     database: "regreen",
+//     port: 3306,
+//     ssl: {
+//       rejectUnauthorized: true
+//     }
+//   });
+//
+//   return drizzle(connection, { schema, mode: "default" });
+// };
 
-// 미리 준비된 쿼리
-db.query = {
-  ...db.query,
-  users: {
-    findFirst: async (params: { where: any }) => {
-      const result = await db.select().from(schema.users).where(params.where);
-      return result[0] ?? null;
-    },
-    findByEmail: async (email: string) => {
-      const result = await db.select().from(schema.users).where(eq(schema.users.email, email));
-      return result[0] ?? null;
-    },
-    create: async (data: any) => {
-      const result = await db.insert(schema.users).values(data).returning();
-      return result[0];
-    }
-  }
+// 데이터베이스 클라이언트 인스턴스 생성 (주석 처리)
+// let dbInstance: any;
+
+// API 설정
+export const API_CONFIG = {
+  // API 기본 URL
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://43.201.108.28/v1/api/",
+  
+  // 기본 헤더
+  headers: {
+    "Content-Type": "application/json",
+  },
+  
+  // 타임아웃 설정 (밀리초)
+  timeout: 10000,
 };
 
-export default db; 
+// API 래퍼 함수
+export const getAPI = async () => {
+  // API 호출용 래퍼 함수
+  return {
+    callApi: async (endpoint: string, method: string = 'GET', data?: any) => {
+      try {
+        const response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
+          method,
+          headers: API_CONFIG.headers,
+          body: data ? JSON.stringify(data) : undefined,
+        });
+        
+        return await response.json();
+      } catch (error) {
+        console.error(`API 호출 오류 (${endpoint}):`, error);
+        throw error;
+      }
+    }
+  };
+};
+
+export default getAPI; 

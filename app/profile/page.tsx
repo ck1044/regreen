@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -22,42 +22,71 @@ import ProfileForm from '@/components/profile/profile-form';
 import PasswordForm from '@/components/profile/password-form';
 import NotificationSettings from '@/components/profile/notification-settings';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import apiClient from '@/lib/api'; // API 클라이언트 임포트
 
+// API의 기본 UserProfile 인터페이스
 interface UserProfile {
-  id: string;
-  name: string;
+  role: 'CUSTOMER' | 'STORE_OWNER' | 'ADMIN';
   email: string;
-  phone: string;
-  role: 'customer' | 'owner' | 'admin' | 'USER';
+  name: string;
+  phoneNumber: string;
+}
+
+// 확장된 UserProfile 인터페이스 (UI에 필요한 추가 속성 포함)
+interface ExtendedUserProfile extends UserProfile {
+  id?: string;
   address?: string;
   profileImage?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export default function ProfilePage() {
   const router = useRouter();
   
-  const [isLoading, setIsLoading] = useState(false);
-  const [userData, setUserData] = useState<UserProfile>({
-    id: 'user-1',
-    name: '김그린',
-    email: 'green@example.com',
-    phone: '010-1234-5678',
-    address: '서울특별시 강남구 테헤란로 123',
-    role: 'owner', // 'customer', 'owner', 'admin' 중 하나
-    profileImage: 'https://via.placeholder.com/150',
-    createdAt: '2023-01-15'
+  const [isLoading, setIsLoading] = useState(true);
+  const [userData, setUserData] = useState<ExtendedUserProfile>({
+    id: '',
+    name: '',
+    email: '',
+    phoneNumber: '',
+    address: '',
+    role: 'CUSTOMER',
+    profileImage: ''
   });
 
-  // 실제 구현에서는 API에서 사용자 데이터를 가져옵니다
+  useEffect(() => {
+    // 컴포넌트 마운트 시 사용자 데이터 가져오기
+    fetchUserData();
+  }, []);
+
+  // API를 사용하여 사용자 데이터 가져오기
   const fetchUserData = async () => {
     setIsLoading(true);
     try {
-      // 실제 API 호출 대신 임시 지연
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // setUserData(response.data);
+      // API 클라이언트를 사용하여 사용자 프로필 요청
+      const profileData = await apiClient.user.getProfile();
+      
+      // API 응답을 확장 인터페이스에 매핑
+      setUserData({
+        ...profileData, // 기본 속성 복사
+        id: 'user-id', // 추가 속성 설정
+        address: '', // 기본값 설정
+        profileImage: 'https://via.placeholder.com/150', // 기본값 설정
+        createdAt: '' // 기본값 설정
+      });
     } catch (error) {
       console.error('사용자 데이터 불러오기 오류:', error);
+      // 오류 발생 시 기본 데이터 사용
+      setUserData({
+        name: '',
+        email: '',
+        phoneNumber: '',
+        role: 'CUSTOMER',
+        id: '',
+        address: '',
+        profileImage: 'https://via.placeholder.com/150',
+        createdAt: ''
+      });
     } finally {
       setIsLoading(false);
     }
@@ -65,21 +94,21 @@ export default function ProfilePage() {
 
   // 로그아웃 처리
   const handleLogout = () => {
-    // 실제 구현에서는 인증 서비스 로그아웃 호출
-    console.log('로그아웃');
+    // API 클라이언트를 사용하여 로그아웃
+    apiClient.auth.signout();
     router.push('/auth/signin');
   };
 
   // 사용자 역할에 따른 추가 메뉴 항목 구성
   const getRoleBasedMenuItems = () => {
     switch (userData.role) {
-      case 'owner':
+      case 'STORE_OWNER':
         return [
-          { icon: <Store className="h-5 w-5" />, label: '내 가게 관리', path: '/shops/manage' },
+          { icon: <Store className="h-5 w-5" />, label: '내 가게 관리', path: '/stores' },
           { icon: <Package className="h-5 w-5" />, label: '재고 관리', path: '/inventory/manage' },
           { icon: <Calendar className="h-5 w-5" />, label: '예약 관리', path: '/reservations/manage' }
         ];
-      case 'admin':
+      case 'ADMIN':
         return [
           { icon: <Shield className="h-5 w-5" />, label: '관리자 대시보드', path: '/admin/dashboard' },
           { icon: <Store className="h-5 w-5" />, label: '가게 관리', path: '/admin/shops' },
@@ -99,8 +128,20 @@ export default function ProfilePage() {
   ];
 
   // 프로필 업데이트 핸들러
-  const handleProfileUpdate = (updatedProfile: any) => {
-    setUserData({ ...userData, ...updatedProfile });
+  const handleProfileUpdate = async (updatedProfile: any) => {
+    setIsLoading(true);
+    try {
+      // API 클라이언트를 사용하여 프로필 업데이트
+      // 실제 API 엔드포인트에 맞게 수정 필요
+      // await apiClient.user.updateProfile(updatedProfile);
+      
+      // UI 업데이트
+      setUserData({ ...userData, ...updatedProfile });
+    } catch (error) {
+      console.error('프로필 업데이트 오류:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -123,7 +164,7 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-bold">{userData.name}</h1>
           <p className="text-sm text-muted-foreground">{userData.email}</p>
           <div className="inline-flex items-center px-2 py-0.5 mt-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
-            {userData.role === 'customer' ? '일반 사용자' : userData.role === 'owner' ? '사장님' : userData.role === 'admin' ? '관리자' : ''}
+            {userData.role === 'CUSTOMER' ? '일반 사용자' : userData.role === 'STORE_OWNER' ? '사장님' : userData.role === 'ADMIN' ? '관리자' : ''}
           </div>
         </div>
       </div>
@@ -147,7 +188,7 @@ export default function ProfilePage() {
                 userProfile={{
                   name: userData.name,
                   email: userData.email,
-                  phone: userData.phone,
+                  phone: userData.phoneNumber, // phoneNumber를 phone으로 전달
                   address: userData.address,
                   role: userData.role,
                   profileImage: userData.profileImage,
@@ -177,7 +218,7 @@ export default function ProfilePage() {
               <CardDescription>알림 수신 여부를 설정하세요</CardDescription>
             </CardHeader>
             <CardContent>
-              <NotificationSettings userId={userData.id} />
+              <NotificationSettings userId={userData.id || ''} />
             </CardContent>
           </Card>
         </TabsContent>

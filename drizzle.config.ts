@@ -1,11 +1,10 @@
 import type { Config } from "drizzle-kit";
 
 export default {
-  schema: "./lib/db/schema.ts",
+  schema: "./db/schema.ts",
   out: "./drizzle",
-  dialect: "postgresql",
+  driver: "mysql2",
   dbCredentials: {
-    // 환경 변수로 관리되어야 합니다(실제 환경에서는 .env 파일을 통해)
-    url: process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/regreen",
+    uri: "mysql://root:regreen123!@regreen.c7ieosiyc1x7.ap-northeast-2.rds.amazonaws.com:3306/regreen",
   },
 } satisfies Config; 

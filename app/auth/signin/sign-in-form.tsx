@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LockIcon, MailIcon, Loader2 } from "lucide-react";
+import apiClient from "@/lib/api"; // API 클라이언트 임포트
 
 // 로그인 유효성 검사 스키마
 const signInSchema = z.object({
@@ -35,11 +36,62 @@ export default function SignInForm() {
     },
   });
 
+  // 사용자 프로필 정보 가져오기
+  const fetchUserProfile = async () => {
+    try {
+      const userProfile = await apiClient.user.getProfile();
+      
+      // 관리자인 경우 admin 페이지로 리다이렉트
+      if (apiClient.isAdmin()) {
+        router.push('/admin');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('사용자 프로필 가져오기 오류:', error);
+      return false;
+    }
+  };
+
   async function onSubmit(data: SignInFormValues) {
     setIsLoading(true);
     setError(null);
 
     try {
+      // API 클라이언트를 사용한 로그인 시도
+      try {
+        const authResponse = await apiClient.auth.signin(data);
+        // API 직접 로그인 성공
+        
+        // 로컬 스토리지에 토큰 저장
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', authResponse.accessToken);
+        }
+        
+        // NextAuth를 통한 세션 설정도 함께 진행 (선택적)
+        await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          redirect: false,
+        });
+        
+        // 사용자 프로필 정보 가져오기
+        const isAdmin = await fetchUserProfile();
+        
+        // 로그인 성공 후 리다이렉트 (관리자가 아닌 경우에만)
+        if (!isAdmin) {
+          router.refresh();
+          router.push("/");
+        }
+        
+        return;
+      } catch (apiError) {
+        console.error("API 로그인 오류:", apiError);
+        // API 로그인이 실패한 경우 NextAuth로 시도
+      }
+
+      // NextAuth를 통한 로그인 (API 실패시 백업)
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
@@ -53,7 +105,7 @@ export default function SignInForm() {
 
       // 로그인 성공 시 리디렉션
       router.refresh();
-      router.push("/");
+      router.push("/main");
     } catch (error) {
       setError("로그인 중 오류가 발생했습니다");
       console.error(error);

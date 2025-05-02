@@ -21,7 +21,7 @@ const NavigationBar = ({ userRole }: NavigationBarProps) => {
 
   const navItems: NavItem[] = [
     {
-      href: "/",
+      href: "/main",
       label: "홈",
       icon: <Home size={20} />,
       roles: ["customer", "shop", "admin"],
