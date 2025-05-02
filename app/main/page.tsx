@@ -40,13 +40,9 @@ export default function MainPage() {
       expiresAt: "내일 마감"
     }
   ];
-
-  // 환경 지표 데이터
-
-
   return (
     <div className="pb-16">
-      {/* 서비스 소개 배너 */}
+      {/* 서비스 소개 배너
       <div className="relative h-[300px] w-full">
         <div className="absolute inset-0 flex flex-col justify-center items-center p-6">
           <div className="flex items-center mb-3">
@@ -62,14 +58,11 @@ export default function MainPage() {
             </button>
           </Link>
         </div>
-      </div>
-
-
-
+      </div> */}
       {/* 최근 등록된 재고 섹션 */}
       <div className="p-4 mt-2">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-[#0f172a]">오늘의 할인 상품</h2>
+          <h2 className="text-xl font-bold text-[#0f172a]">오늘의 상품</h2>
           <Link href="/inventory" className="text-sm text-[#5b87f0] hover:underline flex items-center">
             더보기
             <ArrowRight size={14} className="ml-1" />

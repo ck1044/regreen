@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -111,11 +112,15 @@ export default function NotificationDialog({
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
             <span>알림</span>
-            {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-                모두 읽음 표시
-              </Button>
-            )}
+            <div className="flex items-center space-x-2">
+              {unreadCount > 0 && (
+                <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                  모두 읽음 표시
+                </Button>
+              )}
+              <DialogClose>
+              </DialogClose>
+            </div>
           </DialogTitle>
         </DialogHeader>
         

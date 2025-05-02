@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
+
 
 interface NotificationSetting {
   id: string;
@@ -18,7 +19,6 @@ interface NotificationSettingsProps {
 }
 
 export default function NotificationSettings({ userId }: NotificationSettingsProps) {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<NotificationSetting[]>([]);
@@ -97,16 +97,13 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
       // 임시로 1초 지연 (API 호출 시뮬레이션)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast({
-        title: '알림 설정 저장 완료',
+      toast.success('알림 설정 저장 완료', {
         description: '알림 설정이 성공적으로 저장되었습니다.',
       });
     } catch (error) {
       console.error('알림 설정 저장 오류:', error);
-      toast({
-        title: '알림 설정 저장 실패',
+      toast.error('알림 설정 저장 실패', {
         description: '알림 설정 저장 중 오류가 발생했습니다.',
-        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);

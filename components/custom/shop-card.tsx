@@ -9,7 +9,6 @@ type ShopCardProps = {
   name: string;
   image: string;
   location: string;
-  rating: number;
   category?: string;
   distance?: string;
   isNew?: boolean;
@@ -21,7 +20,6 @@ const ShopCard = ({
   name,
   image,
   location,
-  rating,
   category,
   distance,
   isNew = false,
@@ -62,10 +60,6 @@ const ShopCard = ({
                 <span className="text-[#5DCA69]">{distance}</span>
               )}
             </div>
-          </div>
-          <div className="flex items-center mt-1 text-xs">
-            <Star size={12} className="text-yellow-500 mr-1" />
-            <span className="font-medium text-[#0f172a]">{rating.toFixed(1)}</span>
           </div>
         </div>
       </div>
