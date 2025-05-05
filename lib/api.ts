@@ -10,6 +10,110 @@ import {
   formatInternalApiUrl
 } from "@/app/api/routes";
 
+// 인증 관련 타입
+export interface SigninRequest {
+  email: string;
+  password: string;
+}
+
+export interface SigninResponse {
+  accessToken: string;
+}
+
+// 회원가입 관련 타입
+import { 
+  CustomerSignupRequest,
+  StoreOwnerSignupRequest,
+  SignupResponse
+} from '@/auth/signup';
+
+// 사용자 관련 타입
+import {
+  UserProfile,
+  UpdateProfileRequest,
+  UpdatePasswordRequest
+} from '@/lib/user/types';
+
+// 재고 관련 타입
+export interface InventoryCreateRequest {
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  availableTime: string;
+}
+
+export interface InventoryDetail {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  imageUrl: string;
+  startTime: string;
+  endTime: string;
+  store: {
+    id: number;
+    name: string;
+    address: string;
+    phoneNumber: string;
+    lat: number;
+    lng: number;
+    storeInfo: string;
+    storePickupTime: string;
+    verificationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+    category: {
+      id: number;
+      name: string;
+    }
+  }
+}
+
+export interface InventoryPreview {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  imageUrl: string;
+  startTime: string;
+  endTime: string;
+}
+
+// 예약 관련 타입
+export interface ReservationCreateRequest {
+  inventoryId: number;
+  pickUpTime: string;
+  amount: number;
+}
+
+export interface CustomerReservation {
+  id: number;
+  inventoryImage: string;
+  inventoryName: string;
+  inventoryPrice: number;
+  storeName: string;
+  storeAddress: string;
+  storeCategory: string;
+  amount: number;
+  pickUpTime: string;
+  status: ReservationStatus;
+  createdAt: string;
+}
+
+export interface StoreOwnerReservation {
+  id: number;
+  userName: string;
+  amount: number;
+  pickUpTime: string;
+  status: ReservationStatus;
+  createdAt: string;
+}
+
+export interface ReservationStatusUpdateRequest {
+  status: ReservationStatus;
+}
+
 // API 기본 URL 설정 (환경 변수 사용)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://43.201.108.28/v1/api/";
 
@@ -31,90 +135,16 @@ interface SignupRequest {
   phoneNumber: string;
 }
 
-interface SigninRequest {
-  email: string;
-  password: string;
-}
-
 interface AuthResponse {
   accessToken: string;
-  // refreshToken: string; // 추후 구현 예정
 }
 
 interface StoreOwnerProfileRequest {
-  name: string;
-  phoneNumber: string;
-  storeName: string;
-  storeAddress: string;
-  storeCategory: string;
+  shopName: string;
+  shopLocation: string;
+  shopPhoneNumber: string;
+  verificationPhoto?: File;
   storePhoneNumber: string;
-}
-
-interface UserProfile {
-  role: UserRole;
-  email: string;
-  name: string;
-  phoneNumber: string;
-}
-
-interface InventoryRequest {
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-  availableTime: string;
-}
-
-interface InventoryDetail {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-  imageUrl: string;
-  startTime: string;
-  endTime: string;
-  store: {
-    id: number;
-    name: string;
-    address: string;
-    phoneNumber: string;
-    verificationStatus: VerificationStatus;
-    verificationPhoto: string;
-  };
-}
-
-interface ReservationRequest {
-  inventoryId: number;
-  pickUpTime: string;
-  amount: number;
-}
-
-interface CustomerReservation {
-  id: number;
-  inventoryImage: string;
-  inventoryName: string;
-  inventoryPrice: number;
-  storeName: string;
-  storeAddress: string;
-  storeCategory: string;
-  amount: number;
-  pickUpTime: string;
-  status: ReservationStatus;
-  createdAt: string;
-}
-
-interface StoreOwnerReservation {
-  id: number;
-  userName: string;
-  amount: number;
-  pickUpTime: string;
-  status: ReservationStatus;
-  createdAt: string;
-}
-
-interface ReservationStatusUpdateRequest {
-  status: ReservationStatus;
 }
 
 interface StorePreview {
@@ -173,7 +203,6 @@ interface Notification {
   content: string;
   createdAt: string;
 }
-
 
 // 시간 변환 유틸리티 함수
 export const convertTimeToISO = (time: string) => {
@@ -346,11 +375,29 @@ class ApiClient {
   
   // 인증 관련 API
   auth = {
-    // 회원가입
-    signup: async (data: SignupRequest): Promise<AuthResponse> => {
-      console.log('회원가입 요청:', data);
+    // 고객 회원가입
+    signupCustomer: async (data: CustomerSignupRequest): Promise<SignupResponse> => {
+      console.log('고객 회원가입 요청:', data);
       
-      const result = await this.request<AuthResponse>(AUTH_ROUTES.SIGNUP, 'POST', data);
+      const result = await this.request<SignupResponse>(AUTH_ROUTES.SIGNUP_CUSTOMER, 'POST', data);
+      
+      // 액세스 토큰이 있으면 저장
+      if (result.accessToken) {
+        this.setToken(result.accessToken);
+      }
+      
+      return result;
+    },
+    
+    // 사장님 회원가입
+    signupStoreOwner: async (data: StoreOwnerSignupRequest, verificationPhoto: File): Promise<SignupResponse> => {
+      console.log('사장님 회원가입 요청:', data);
+      
+      const formData = new FormData();
+      formData.append('file', verificationPhoto);
+      formData.append('data', JSON.stringify(data));
+      
+      const result = await this.request<SignupResponse>(AUTH_ROUTES.SIGNUP_STORE_OWNER, 'POST', formData, true);
       
       // 액세스 토큰이 있으면 저장
       if (result.accessToken) {
@@ -361,8 +408,8 @@ class ApiClient {
     },
     
     // 로그인
-    signin: async (data: SigninRequest): Promise<AuthResponse> => {
-      const response = await this.request<AuthResponse>(AUTH_ROUTES.SIGNIN, 'POST', data);
+    signin: async (data: SigninRequest): Promise<SigninResponse> => {
+      const response = await this.request<SigninResponse>(AUTH_ROUTES.SIGNIN, 'POST', data);
       this.setToken(response.accessToken);
       
       // 로그인 후 사용자 프로필 정보 자동으로 가져오기
@@ -384,19 +431,7 @@ class ApiClient {
   
   // 사용자 관련 API
   user = {
-    // 점주 프로필 생성
-    createStoreOwnerProfile: async (data: StoreOwnerProfileRequest, verificationPhoto: File | null): Promise<void> => {
-      if (!verificationPhoto) {
-        // 파일이 없는 경우 일반 JSON 요청
-        return this.request<void>(USER_ROUTES.STORE_OWNER_PROFILE, 'POST', data);
-      } else {
-        // 파일이 있는 경우 FormData 요청
-        const formData = this.createFormData(data, verificationPhoto);
-        return this.request<void>(USER_ROUTES.STORE_OWNER_PROFILE, 'POST', formData, true);
-      }
-    },
-    
-    // 프로필 상태 조회
+    // 프로필 조회
     getProfile: async (): Promise<UserProfile> => {
       const profile = await this.request<UserProfile>(USER_ROUTES.PROFILE, 'GET');
       this.setUserProfile(profile);
@@ -404,40 +439,30 @@ class ApiClient {
     },
     
     // 프로필 업데이트
-    updateProfile: async (data: Partial<UserProfile>): Promise<void> => {
-      const profile = await this.request<UserProfile>(USER_ROUTES.PROFILE, 'PATCH', data);
+    updateProfile: async (data: UpdateProfileRequest): Promise<UserProfile> => {
+      const profile = await this.request<UserProfile>(USER_ROUTES.UPDATE_PROFILE, 'PATCH', data);
       // 업데이트된 프로필 정보로 로컬 상태 갱신
       this.setUserProfile(profile);
-      return;
+      return profile;
+    },
+    
+    // 비밀번호 변경
+    updatePassword: async (data: UpdatePasswordRequest): Promise<void> => {
+      await this.request<void>(USER_ROUTES.UPDATE_PASSWORD, 'PATCH', data);
     }
   };
-  
-  // 파일 업로드를 위한 FormData 생성 헬퍼
-  private createFormData(data: unknown, file?: File | null, fileField: string = 'file'): FormData {
-    const formData = new FormData();
-    
-    // JSON 데이터를 FormData에 추가
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
-        formData.append(key, typeof value === 'object' ? 
-          JSON.stringify(value) : String(value || ''));
-      });
-    }
-    
-    // 파일이 있으면 추가
-    if (file) {
-      formData.append(fileField, file);
-    }
-    
-    return formData;
-  }
   
   // 재고 관련 API
   inventory = {
     // 재고 생성
-    create: async (data: InventoryRequest, image?: File): Promise<void> => {
+    create: async (data: InventoryCreateRequest, image?: File): Promise<void> => {
       const formData = this.createFormData(data, image);
       return this.request<void>(INVENTORY_ROUTES.BASE, 'POST', formData, true);
+    },
+    
+    // 오늘의 재고 목록 조회
+    getAll: async (): Promise<InventoryPreview[]> => {
+      return this.request<InventoryPreview[]>(INVENTORY_ROUTES.BASE, 'GET');
     },
     
     // 재고 상세 조회
@@ -449,7 +474,7 @@ class ApiClient {
   // 예약 관련 API
   reservation = {
     // 예약 생성
-    create: async (data: ReservationRequest): Promise<void> => {
+    create: async (data: ReservationCreateRequest): Promise<void> => {
       return this.request<void>(RESERVATION_ROUTES.BASE, 'POST', data);
     },
     
@@ -489,6 +514,26 @@ class ApiClient {
       return this.request<Notification[]>(NOTIFICATION_ROUTES.BASE, 'GET');
     }
   };
+
+  // 파일 업로드를 위한 FormData 생성 헬퍼
+  private createFormData(data: unknown, file?: File | null, fileField: string = 'file'): FormData {
+    const formData = new FormData();
+    
+    // JSON 데이터를 FormData에 추가
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
+        formData.append(key, typeof value === 'object' ? 
+          JSON.stringify(value) : String(value || ''));
+      });
+    }
+    
+    // 파일이 있으면 추가
+    if (file) {
+      formData.append(fileField, file);
+    }
+    
+    return formData;
+  }
 }
 
 // API 클라이언트 인스턴스 생성
