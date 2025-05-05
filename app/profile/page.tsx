@@ -30,6 +30,7 @@ interface UserProfile {
   email: string;
   name: string;
   phoneNumber: string;
+  university: string;
 }
 
 // 확장된 UserProfile 인터페이스 (UI에 필요한 추가 속성 포함)
@@ -48,6 +49,7 @@ export default function ProfilePage() {
     email: '',
     phoneNumber: '',
     role: 'CUSTOMER',
+    university: ''
   });
 
   useEffect(() => {
@@ -66,7 +68,8 @@ export default function ProfilePage() {
       setUserData({
         ...profileData, // 기본 속성 복사(role, email, name, phoneNumber)
         id: '', // 확장 속성은 빈 값으로 설정
-        createdAt: ''
+        createdAt: '',
+        university: ''
       });
     } catch (error) {
       console.error('사용자 데이터 불러오기 오류:', error);
@@ -112,7 +115,7 @@ export default function ProfilePage() {
       // 기존 API 인터페이스와 ProfileForm 인터페이스 사이의 필드명 차이(phone vs phoneNumber) 처리
       await apiClient.user.updateProfile({
         name: updatedProfile.name,
-        email: updatedProfile.email,
+        university: updatedProfile.university,
         phoneNumber: updatedProfile.phoneNumber
       });
       
@@ -120,7 +123,6 @@ export default function ProfilePage() {
       setUserData({
         ...userData,
         name: updatedProfile.name,
-        email: updatedProfile.email,
         phoneNumber: updatedProfile.phoneNumber
       });
 
@@ -160,13 +162,15 @@ export default function ProfilePage() {
                   name: userData.name,
                   email: userData.email,
                   phone: userData.phoneNumber, // phoneNumber를 phone으로 전달
-                  role: userData.role
+                  role: userData.role,
+                  university: userData.university
                 }}
                 onSubmit={(data) => handleProfileUpdate({
                   name: data.name,
                   email: data.email,
                   phoneNumber: data.phone, // phone을 phoneNumber로 변환
-                  role: userData.role
+                  role: userData.role,
+                  university: data.university
                 })}
               />
             </CardContent>

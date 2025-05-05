@@ -7,10 +7,8 @@ import * as z from 'zod';
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 // 프로필 폼 스키마 정의
 const profileFormSchema = z.object({
@@ -19,6 +17,7 @@ const profileFormSchema = z.object({
   phone: z.string().regex(/^\d{3}-\d{4}-\d{4}$|^\d{11}$/, { 
     message: "전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678 또는 01012345678)" 
   }),
+  university: z.string().min(1, { message: "학교를 입력해주세요." }),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -30,14 +29,13 @@ export interface ProfileFormProps {
     email: string;
     phone: string;
     role: string;
-    profileImage?: string;
+    university: string;
   };
   onSubmit: (data: ProfileFormValues) => void;
 }
 
 export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(userProfile.profileImage || null);
 
   // 폼 초기화
   const form = useForm<ProfileFormValues>({
@@ -46,6 +44,7 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
       name: userProfile.name,
       email: userProfile.email,
       phone: userProfile.phone,
+      university: userProfile.university
     },
   });
 
@@ -66,43 +65,9 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
     }
   };
 
-  // 이미지 업로드 핸들러
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setImagePreview(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* 프로필 이미지 업로드
-        <div className="flex flex-col items-center space-y-4">
-          <Avatar className="h-24 w-24">
-            <AvatarImage src={imagePreview || ""} alt={userProfile.name} />
-            <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          
-          <label htmlFor="profile-image" className="flex items-center justify-center px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-md cursor-pointer hover:bg-primary/20 focus:outline-none">
-            <Upload className="mr-2 h-4 w-4" />
-            프로필 이미지 변경
-            <input
-              id="profile-image"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
-          </label>
-        </div> */}
-
         {/* 이름 필드 */}
         <FormField
           control={form.control}
@@ -151,7 +116,20 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
           )}
         />
 
-
+        {/* 학교 필드 */}
+        <FormField
+          control={form.control}
+          name="university"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>학교</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="학교를 입력하세요" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (
             <>
