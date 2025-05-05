@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Upload } from "lucide-react";
 
@@ -19,7 +19,6 @@ const profileFormSchema = z.object({
   phone: z.string().regex(/^\d{3}-\d{4}-\d{4}$|^\d{11}$/, { 
     message: "전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678 또는 01012345678)" 
   }),
-  address: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -30,7 +29,6 @@ export interface ProfileFormProps {
     name: string;
     email: string;
     phone: string;
-    address?: string;
     role: string;
     profileImage?: string;
   };
@@ -40,7 +38,6 @@ export interface ProfileFormProps {
 export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(userProfile.profileImage || null);
-  const { toast } = useToast();
 
   // 폼 초기화
   const form = useForm<ProfileFormValues>({
@@ -49,7 +46,6 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
       name: userProfile.name,
       email: userProfile.email,
       phone: userProfile.phone,
-      address: userProfile.address || "",
     },
   });
 
@@ -62,16 +58,9 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
       
       onSubmit(data);
       
-      toast({
-        title: "프로필이 업데이트되었습니다.",
-        description: "사용자 정보가 성공적으로 저장되었습니다.",
-      });
+      toast.success("프로필이 업데이트되었습니다.");
     } catch (error) {
-      toast({
-        title: "오류가 발생했습니다.",
-        description: "프로필 정보를 저장하는 중 오류가 발생했습니다. 다시 시도해주세요.",
-        variant: "destructive",
-      });
+      toast.error("오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +83,7 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* 프로필 이미지 업로드 */}
+        {/* 프로필 이미지 업로드
         <div className="flex flex-col items-center space-y-4">
           <Avatar className="h-24 w-24">
             <AvatarImage src={imagePreview || ""} alt={userProfile.name} />
@@ -112,7 +101,7 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
               onChange={handleImageUpload}
             />
           </label>
-        </div>
+        </div> */}
 
         {/* 이름 필드 */}
         <FormField
@@ -162,24 +151,6 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
           )}
         />
 
-        {/* 주소 필드 */}
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>주소</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  placeholder="주소를 입력하세요"
-                  className="resize-none"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (

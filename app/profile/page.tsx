@@ -35,8 +35,6 @@ interface UserProfile {
 // 확장된 UserProfile 인터페이스 (UI에 필요한 추가 속성 포함)
 interface ExtendedUserProfile extends UserProfile {
   id?: string;
-  address?: string;
-  profileImage?: string;
   createdAt?: string;
 }
 
@@ -49,9 +47,7 @@ export default function ProfilePage() {
     name: '',
     email: '',
     phoneNumber: '',
-    address: '',
     role: 'CUSTOMER',
-    profileImage: ''
   });
 
   useEffect(() => {
@@ -68,25 +64,12 @@ export default function ProfilePage() {
       
       // API 응답을 확장 인터페이스에 매핑
       setUserData({
-        ...profileData, // 기본 속성 복사
-        id: 'user-id', // 추가 속성 설정
-        address: '', // 기본값 설정
-        profileImage: 'https://via.placeholder.com/150', // 기본값 설정
-        createdAt: '' // 기본값 설정
+        ...profileData, // 기본 속성 복사(role, email, name, phoneNumber)
+        id: '', // 확장 속성은 빈 값으로 설정
+        createdAt: ''
       });
     } catch (error) {
       console.error('사용자 데이터 불러오기 오류:', error);
-      // 오류 발생 시 기본 데이터 사용
-      setUserData({
-        name: '',
-        email: '',
-        phoneNumber: '',
-        role: 'CUSTOMER',
-        id: '',
-        address: '',
-        profileImage: 'https://via.placeholder.com/150',
-        createdAt: ''
-      });
     } finally {
       setIsLoading(false);
     }
@@ -108,16 +91,10 @@ export default function ProfilePage() {
           { icon: <Package className="h-5 w-5" />, label: '재고 관리', path: '/inventory/manage' },
           { icon: <Calendar className="h-5 w-5" />, label: '예약 관리', path: '/reservations/manage' }
         ];
-      case 'ADMIN':
-        return [
-          { icon: <Shield className="h-5 w-5" />, label: '관리자 대시보드', path: '/admin/dashboard' },
-          { icon: <Store className="h-5 w-5" />, label: '가게 관리', path: '/admin/shops' },
-          { icon: <User className="h-5 w-5" />, label: '사용자 관리', path: '/admin/users' }
-        ];
       default:
         return [
           { icon: <Calendar className="h-5 w-5" />, label: '예약 내역', path: '/reservations' },
-          { icon: <Bell className="h-5 w-5" />, label: '구독 중인 가게', path: '/profile/subscriptions' }
+          { icon: <Bell className="h-5 w-5" />, label: '가게 찾기', path: '/shops' }
         ];
     }
   };
@@ -128,15 +105,26 @@ export default function ProfilePage() {
   ];
 
   // 프로필 업데이트 핸들러
-  const handleProfileUpdate = async (updatedProfile: any) => {
+  const handleProfileUpdate = async (updatedProfile: UserProfile) => {
     setIsLoading(true);
     try {
       // API 클라이언트를 사용하여 프로필 업데이트
-      // 실제 API 엔드포인트에 맞게 수정 필요
-      // await apiClient.user.updateProfile(updatedProfile);
+      // 기존 API 인터페이스와 ProfileForm 인터페이스 사이의 필드명 차이(phone vs phoneNumber) 처리
+      await apiClient.user.updateProfile({
+        name: updatedProfile.name,
+        email: updatedProfile.email,
+        phoneNumber: updatedProfile.phoneNumber
+      });
       
       // UI 업데이트
-      setUserData({ ...userData, ...updatedProfile });
+      setUserData({
+        ...userData,
+        name: updatedProfile.name,
+        email: updatedProfile.email,
+        phoneNumber: updatedProfile.phoneNumber
+      });
+
+      console.log('프로필이 성공적으로 업데이트되었습니다.');
     } catch (error) {
       console.error('프로필 업데이트 오류:', error);
     } finally {
@@ -154,30 +142,13 @@ export default function ProfilePage() {
 
   return (
     <div className="container max-w-md mx-auto p-4 pb-20">
-      {/* 프로필 헤더 */}
-      <div className="flex items-center mb-6">
-        <Avatar className="h-24 w-24 mr-4">
-          <AvatarImage src={userData.profileImage || ''} alt={userData.name} />
-          <AvatarFallback>{userData.name[0]}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="text-2xl font-bold">{userData.name}</h1>
-          <p className="text-sm text-muted-foreground">{userData.email}</p>
-          <div className="inline-flex items-center px-2 py-0.5 mt-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
-            {userData.role === 'CUSTOMER' ? '일반 사용자' : userData.role === 'STORE_OWNER' ? '사장님' : userData.role === 'ADMIN' ? '관리자' : ''}
-          </div>
-        </div>
-      </div>
-
-      {/* 프로필 탭 */}
-      <Tabs defaultValue="info" className="mb-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="info">기본 정보</TabsTrigger>
-          <TabsTrigger value="password">비밀번호</TabsTrigger>
-          <TabsTrigger value="notifications">알림 설정</TabsTrigger>
+      <Tabs defaultValue="profile">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="profile">프로필</TabsTrigger>
+          <TabsTrigger value="settings">설정</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="info" className="mt-4">
+        
+        <TabsContent value="profile">
           <Card>
             <CardHeader>
               <CardTitle>프로필 정보</CardTitle>
@@ -189,43 +160,34 @@ export default function ProfilePage() {
                   name: userData.name,
                   email: userData.email,
                   phone: userData.phoneNumber, // phoneNumber를 phone으로 전달
-                  address: userData.address,
-                  role: userData.role,
-                  profileImage: userData.profileImage,
+                  role: userData.role
                 }}
-                onSubmit={handleProfileUpdate}
+                onSubmit={(data) => handleProfileUpdate({
+                  name: data.name,
+                  email: data.email,
+                  phoneNumber: data.phone, // phone을 phoneNumber로 변환
+                  role: userData.role
+                })}
               />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="password" className="mt-4">
+        {/* <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>비밀번호 변경</CardTitle>
-              <CardDescription>계정 보안을 위해 주기적으로 비밀번호를 변경하세요</CardDescription>
+              <CardTitle>설정</CardTitle>
+              <CardDescription>계정 설정을 관리하세요</CardDescription>
             </CardHeader>
             <CardContent>
               <PasswordForm />
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="notifications" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>알림 설정</CardTitle>
-              <CardDescription>알림 수신 여부를 설정하세요</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <NotificationSettings userId={userData.id || ''} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
 
       {/* 메뉴 항목 */}
-      <Card>
+      <Card className="mt-6">
         <CardHeader>
           <CardTitle>메뉴</CardTitle>
         </CardHeader>
@@ -260,4 +222,4 @@ export default function ProfilePage() {
       </Card>
     </div>
   );
-} 
+}

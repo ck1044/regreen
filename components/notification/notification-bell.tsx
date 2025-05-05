@@ -34,7 +34,7 @@ export function NotificationBell({ isOwner = false }: NotificationBellProps) {
           </Badge>
         )}
       </Button>
-      <NotificationDialog open={open} onOpenChange={setOpen} notifications={[]} onReadAll={() => {}} onNotificationClick={() => {}} />
+      <NotificationDialog open={open} onOpenChange={setOpen} isOwner={isOwner} />
     </>
   );
 } 

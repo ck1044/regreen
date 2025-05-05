@@ -21,42 +21,42 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  {
-    title: "대시보드",
-    href: "/admin/dashboard",
-    icon: <BarChart3 className="w-5 h-5" />,
-    variant: "default",
-  },
-  {
-    title: "사용자 관리",
-    href: "/admin/users",
-    icon: <Users className="w-5 h-5" />,
-    variant: "ghost",
-  },
-  {
-    title: "가게 관리",
-    href: "/admin/shops",
-    icon: <Store className="w-5 h-5" />,
-    variant: "ghost",
-  },
-  {
-    title: "예약 관리",
-    href: "/admin/reservations",
-    icon: <Calendar className="w-5 h-5" />,
-    variant: "ghost",
-  },
+  // {
+  //   title: "대시보드",
+  //   href: "/admin/dashboard",
+  //   icon: <BarChart3 className="w-5 h-5" />,
+  //   variant: "default",
+  // },
+  // {
+  //   title: "사용자 관리",
+  //   href: "/admin/users",
+  //   icon: <Users className="w-5 h-5" />,
+  //   variant: "ghost",
+  // },
+  // {
+  //   title: "가게 관리",
+  //   href: "/admin/shops",
+  //   icon: <Store className="w-5 h-5" />,
+  //   variant: "ghost",
+  // },
+  // {
+  //   title: "예약 관리",
+  //   href: "/admin/reservations",
+  //   icon: <Calendar className="w-5 h-5" />,
+  //   variant: "ghost",
+  // },
   {
     title: "공지사항 관리",
     href: "/admin/notices",
     icon: <Bell className="w-5 h-5" />,
     variant: "ghost",
   },
-  {
-    title: "설정",
-    href: "/admin/settings",
-    icon: <Settings className="w-5 h-5" />,
-    variant: "ghost",
-  },
+  // {
+  //   title: "설정",
+  //   href: "/admin/settings",
+  //   icon: <Settings className="w-5 h-5" />,
+  //   variant: "ghost",
+  // },
 ];
 
 export default function AdminLayout({

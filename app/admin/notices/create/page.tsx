@@ -32,31 +32,31 @@ import {
 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 
-// 공지사항 폼 스키마
-const noticeFormSchema = z.object({
-  title: z.string().min(1, { message: '공지사항 제목을 입력해주세요.' }),
+// 알림 폼 스키마
+const notificationFormSchema = z.object({
+  title: z.string().min(1, { message: '알림 제목을 입력해주세요.' }),
   content: z.string().min(10, { message: '최소 10자 이상 입력해주세요.' }),
   category: z.enum(['general', 'update', 'event', 'maintenance'], {
     required_error: '카테고리를 선택해주세요.',
   }),
   targetGroups: z.array(z.string()).min(1, { message: '최소 하나 이상의 대상 그룹을 선택해주세요.' }),
-  publishImmediately: z.boolean().default(true),
+  publishImmediately: z.boolean().optional(),
   scheduleDate: z.string().optional(),
   scheduleTime: z.string().optional(),
-  sendNotification: z.boolean().default(true),
+  sendNotification: z.boolean().optional(),
 });
 
 // 폼 타입
-type NoticeFormValues = z.infer<typeof noticeFormSchema>;
+type NotificationFormValues = z.infer<typeof notificationFormSchema>;
 
-export default function CreateNoticePage() {
+export default function CreateNotificationPage() {
   const router = useRouter();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 폼 초기화
-  const form = useForm<NoticeFormValues>({
-    resolver: zodResolver(noticeFormSchema),
+  const form = useForm<NotificationFormValues>({
+    resolver: zodResolver(notificationFormSchema),
     defaultValues: {
       title: '',
       content: '',
@@ -71,20 +71,37 @@ export default function CreateNoticePage() {
   const publishImmediately = form.watch('publishImmediately');
   
   // 폼 제출 핸들러
-  const onSubmit = async (values: NoticeFormValues) => {
+  const onSubmit = async (values: NotificationFormValues) => {
     setIsSubmitting(true);
     
     try {
-      console.log('공지사항 작성:', values);
+      console.log('알림 작성:', values);
       
-      // 실제 구현에서는 API 호출로 공지사항 저장
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 새로운 notification API를 사용하여 알림 전송
+      const response = await fetch('/api/notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: values.title,
+          content: values.content,
+          targetGroups: values.targetGroups,
+          scheduledAt: !values.publishImmediately && values.scheduleDate && values.scheduleTime
+            ? `${values.scheduleDate}T${values.scheduleTime}:00`
+            : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('알림 전송에 실패했습니다.');
+      }
       
-      toast.success('공지사항이 성공적으로 작성되었습니다.');
-      router.push('/admin/notices');
+      toast.success('알림이 성공적으로 전송되었습니다.');
+      router.push('/admin/notifications');
     } catch (error) {
-      console.error('공지사항 작성 오류:', error);
-      toast.error('공지사항 작성 중 오류가 발생했습니다.');
+      console.error('알림 전송 오류:', error);
+      toast.error('알림 전송 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -98,7 +115,7 @@ export default function CreateNoticePage() {
 
   // 카테고리 정보
   const categoryInfo = {
-    general: { label: '일반', description: '일반적인 공지사항' },
+    general: { label: '일반', description: '일반적인 알림' },
     update: { label: '업데이트', description: '서비스 업데이트 안내' },
     event: { label: '이벤트', description: '이벤트 및 프로모션 안내' },
     maintenance: { label: '점검', description: '서비스 점검 안내' },
@@ -120,19 +137,19 @@ export default function CreateNoticePage() {
           variant="ghost" 
           size="sm" 
           className="mr-2"
-          onClick={() => router.push('/admin/notices')}
+          onClick={() => router.push('/admin/notifications')}
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           돌아가기
         </Button>
-        <h1 className="text-2xl font-bold">새 공지사항 작성</h1>
+        <h1 className="text-2xl font-bold">새 알림 작성</h1>
       </div>
 
       <Card className="mb-6">
         <CardHeader className="pb-3">
-          <CardTitle>공지사항 정보</CardTitle>
+          <CardTitle>알림 정보</CardTitle>
           <CardDescription>
-            공지사항 정보를 입력하고 대상 그룹을 선택하세요.
+            알림 정보를 입력하고 대상 그룹을 선택하세요.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -190,7 +207,7 @@ export default function CreateNoticePage() {
                     <FormItem>
                       <FormLabel>제목</FormLabel>
                       <FormControl>
-                        <Input placeholder="공지사항 제목을 입력하세요" {...field} />
+                        <Input placeholder="알림 제목을 입력하세요" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -205,7 +222,7 @@ export default function CreateNoticePage() {
                       <FormLabel>내용</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="공지사항 내용을 입력하세요" 
+                          placeholder="알림 내용을 입력하세요" 
                           {...field} 
                           className="min-h-[200px]"
                         />
@@ -258,7 +275,7 @@ export default function CreateNoticePage() {
                         <div className="mb-2">
                           <FormLabel>대상 그룹</FormLabel>
                           <FormDescription>
-                            공지사항을 수신할 대상 그룹을 선택하세요.
+                            알림을 수신할 대상 그룹을 선택하세요.
                           </FormDescription>
                         </div>
                         <div className="space-y-2">
@@ -309,9 +326,9 @@ export default function CreateNoticePage() {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">즉시 발행</FormLabel>
+                        <FormLabel className="text-base">즉시 발송</FormLabel>
                         <FormDescription>
-                          공지사항을 즉시 발행하거나 특정 시간에 발행하도록 예약할 수 있습니다.
+                          알림을 즉시 발송하거나 특정 시간에 발송하도록 예약할 수 있습니다.
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -331,7 +348,7 @@ export default function CreateNoticePage() {
                       name="scheduleDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>발행 날짜</FormLabel>
+                          <FormLabel>발송 날짜</FormLabel>
                           <FormControl>
                             <div className="flex items-center">
                               <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -348,7 +365,7 @@ export default function CreateNoticePage() {
                       name="scheduleTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>발행 시간</FormLabel>
+                          <FormLabel>발송 시간</FormLabel>
                           <FormControl>
                             <div className="flex items-center">
                               <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -368,9 +385,9 @@ export default function CreateNoticePage() {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">알림 발송</FormLabel>
+                        <FormLabel className="text-base">푸시 알림 발송</FormLabel>
                         <FormDescription>
-                          공지사항 발행 시 사용자에게 알림을 발송합니다.
+                          사용자에게 푸시 알림을 함께 발송합니다.
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -407,7 +424,7 @@ export default function CreateNoticePage() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => router.push('/admin/notices')}
+                onClick={() => router.push('/admin/notifications')}
               >
                 취소
               </Button>
@@ -416,11 +433,11 @@ export default function CreateNoticePage() {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <>저장 중...</>
+                  <>전송 중...</>
                 ) : (
                   <>
-                    <Send className="mr-2 h-4 w-4" />
-                    공지사항 발행
+                    <Bell className="mr-2 h-4 w-4" />
+                    알림 발송
                   </>
                 )}
               </Button>
@@ -432,11 +449,11 @@ export default function CreateNoticePage() {
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <>저장 중...</>
+                <>전송 중...</>
               ) : (
                 <>
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  확인하고 발행하기
+                  확인하고 발송하기
                 </>
               )}
             </Button>

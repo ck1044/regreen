@@ -11,7 +11,8 @@ export type NotificationType =
   | 'RESERVATION_REJECTED'
   | 'RESERVATION_COMPLETED'
   | 'INVENTORY_UPDATED'
-  | 'INVENTORY_LOW_STOCK';
+  | 'INVENTORY_LOW_STOCK'
+  | 'CONNECTED';
 
 export type Notification = {
   id: string;
@@ -19,10 +20,17 @@ export type Notification = {
   type: NotificationType;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   isRead: boolean;
   createdAt: string;
 };
+
+interface NotificationEvent {
+  id: string;
+  type: string;
+  data: string;
+  timestamp: number;
+}
 
 // SSE 헤더 설정 함수
 function setSSEHeaders(response: Response): Response {
@@ -32,55 +40,8 @@ function setSSEHeaders(response: Response): Response {
   return response;
 }
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const userId = searchParams.get('userId');
-
-  if (!userId) {
-    return NextResponse.json({ error: '사용자 ID가 필요합니다.' }, { status: 400 });
-  }
-
-  // 이미 연결된 클라이언트가 있으면 이전 연결 정리
-  const existingClient = clients.get(userId);
-  if (existingClient) {
-    try {
-      // 이전 연결 종료
-      await existingClient.close();
-    } catch (err) {
-      console.error('이전 클라이언트 연결 종료 중 오류:', err);
-    } finally {
-      clients.delete(userId);
-    }
-  }
-
-  // 스트림 생성
-  const stream = new TransformStream();
-  const writer = stream.writable.getWriter();
-  const encoder = new TextEncoder();
-
-  // 클라이언트 등록
-  clients.set(userId, writer);
-
-  // 연결 확인 메시지 전송
-  const connectEvent = encoder.encode(
-    `data: ${JSON.stringify({ type: 'CONNECTED', message: '알림 서버에 연결되었습니다.' })}\n\n`
-  );
-  await writer.write(connectEvent);
-
-  // 연결 해제 시 클라이언트 제거
-  request.signal.addEventListener('abort', () => {
-    clients.delete(userId);
-    writer.close().catch(err => {
-      console.error('Writer 종료 중 오류:', err);
-    });
-  });
-
-  const response = new Response(stream.readable);
-  return setSSEHeaders(response);
-}
-
-// 알림 전송 함수 (서버 내부에서 사용)
-export async function sendNotification(userId: string, notification: Notification) {
+// 알림 전송 함수 (서버 내부에서만 사용, 내보내지 않음)
+async function sendNotification(userId: string, notification: Notification) {
   const writer = clients.get(userId);
   if (!writer) {
     return false; // 클라이언트가 연결되어 있지 않음
@@ -97,6 +58,60 @@ export async function sendNotification(userId: string, notification: Notificatio
     clients.delete(userId);
     return false;
   }
+}
+
+export async function GET(req: NextRequest) {
+  const encoder = new TextEncoder();
+  
+  // SSE 스트림 설정
+  const stream = new ReadableStream({
+    async start(controller) {
+      // 클라이언트 연결 유지를 위한 주기적 메시지 전송 함수
+      function sendKeepAlive() {
+        const keepAliveMessage = `: keep-alive\n\n`;
+        controller.enqueue(encoder.encode(keepAliveMessage));
+      }
+      
+      // 알림 이벤트 전송 함수
+      function sendEvent(event: NotificationEvent) {
+        const formattedEvent = 
+          `id: ${event.id}\n` +
+          `event: ${event.type}\n` +
+          `data: ${event.data}\n` +
+          `retry: 5000\n\n`;
+        
+        controller.enqueue(encoder.encode(formattedEvent));
+      }
+      
+      // 주기적 keep-alive 설정 (30초마다)
+      const keepAliveInterval = setInterval(sendKeepAlive, 30000);
+      
+      // 알림 이벤트 예시 (실제로는 DB나 외부 이벤트 소스에서 가져와야 함)
+      const exampleEvent: NotificationEvent = {
+        id: '1',
+        type: 'notification',
+        data: JSON.stringify({ title: '새 알림', content: '알림 내용입니다.' }),
+        timestamp: Date.now()
+      };
+      
+      // 예시 알림 전송
+      sendEvent(exampleEvent);
+      
+      // 클린업 함수
+      req.signal.addEventListener('abort', () => {
+        clearInterval(keepAliveInterval);
+      });
+    }
+  });
+  
+  // SSE 응답 헤더 설정 및 스트림 반환
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }
 
 // 테스트 알림 전송용 API 경로

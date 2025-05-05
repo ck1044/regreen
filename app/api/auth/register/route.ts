@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 // import db from "@/lib/db";
 // import { users, userRoleEnum } from "@/lib/db/schema";
 // import { eq } from "drizzle-orm";
-import { API_CONFIG } from "@/db";
+
 
 // API URL 설정
-const API_URL = process.env.NEXT_PUBLIC_API_URL || API_CONFIG.baseUrl;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function POST(req: NextRequest) {
   try {

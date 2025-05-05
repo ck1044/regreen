@@ -21,6 +21,7 @@ export const formatPickupTime = (pickupTime: string) => {
     const date = new Date(pickupTime);
     return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
   } catch (error) {
+    console.error('픽업 시간 형식화 오류:', error);
     return pickupTime; // 변환 실패 시 원본 반환
   }
 };
@@ -34,6 +35,7 @@ export const separateDateAndTime = (isoString: string) => {
       time: date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
     };
   } catch (error) {
+    console.error('날짜와 시간 분리 오류:', error);
     return { date: '', time: '' };
   }
 };

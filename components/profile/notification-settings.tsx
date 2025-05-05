@@ -113,10 +113,8 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
   // 브라우저 알림 권한 요청
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
-      toast({
-        title: '알림 권한 실패',
+      toast.error('알림 권한 실패', {
         description: '이 브라우저는 알림 기능을 지원하지 않습니다.',
-        variant: 'destructive',
       });
       return;
     }
@@ -125,23 +123,18 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
       const permission = await Notification.requestPermission();
       
       if (permission === 'granted') {
-        toast({
-          title: '알림 권한 승인',
+        toast.success('알림 권한 승인', {
           description: '브라우저 알림을 수신할 수 있습니다.',
         });
       } else {
-        toast({
-          title: '알림 권한 거부',
+        toast.error('알림 권한 거부', {
           description: '브라우저 알림 권한이 거부되었습니다. 브라우저 설정에서 권한을 변경해주세요.',
-          variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('알림 권한 요청 오류:', error);
-      toast({
-        title: '알림 권한 오류',
+      toast.error('알림 권한 오류', {
         description: '알림 권한 요청 중 오류가 발생했습니다.',
-        variant: 'destructive',
       });
     }
   };

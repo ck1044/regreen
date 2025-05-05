@@ -165,7 +165,7 @@ const NotificationProvider = ({ children, userId }: NotificationProviderProps) =
       setEventSource(null);
       setConnected(false);
     };
-  }, [userId]);
+  }, [userId, eventSource, maxRetries]);
 
   // 브라우저 알림 권한 요청
   useEffect(() => {

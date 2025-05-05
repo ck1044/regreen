@@ -14,15 +14,7 @@ import {
   MailIcon, 
   UserIcon, 
   PhoneIcon,
-  BuildingIcon
 } from "lucide-react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import apiClient from "@/lib/api"; // API 클라이언트 임포트
 
 // 회원가입 유효성 검사 스키마
@@ -46,16 +38,21 @@ const signUpSchema = z.object({
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
+// API 오류 타입 정의
+interface ApiError {
+  message: string;
+  status?: number;
+  [key: string]: unknown;
+}
+
 export default function SignUpForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [role, setRole] = useState<string>("CUSTOMER");
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -69,37 +66,49 @@ export default function SignUpForm() {
     },
   });
 
-  // 역할 선택 변경 처리
-  const handleRoleChange = (value: string) => {
-    setRole(value);
-    setValue("role", value as "CUSTOMER" | "STORE_OWNER");
-  };
 
   async function onSubmit(data: SignUpFormValues) {
     setIsLoading(true);
     setError(null);
+    console.log('회원가입 시도:', data);
 
     try {
       // API 클라이언트를 사용하여 회원가입 요청
       const { confirmPassword, ...signupData } = data;
-      const result = await apiClient.auth.signup(signupData);
+      console.log('API 클라이언트로 회원가입 요청 데이터:', signupData);
+      
+      // API 클라이언트 호출 (Next.js API 라우트를 통해 요청)
+      try {
+        const result = await apiClient.auth.signup(signupData);
+        console.log('API 클라이언트 회원가입 성공:', result);
 
-      // 회원가입 성공 후 자동 로그인
-      const signInResult = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
+        // 회원가입 성공 후 자동 로그인
+        console.log('자동 로그인 시도...');
+        const signInResult = await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          redirect: false,
+        });
+        console.log('자동 로그인 결과:', signInResult);
 
-      if (signInResult?.error) {
-        throw new Error("로그인 중 오류가 발생했습니다");
+        if (signInResult?.error) {
+          console.error('자동 로그인 실패:', signInResult.error);
+          throw new Error("로그인 중 오류가 발생했습니다");
+        }
+
+        // 회원가입 성공 시 리디렉션
+        router.push("/main");
+      } catch (apiError) {
+        console.error('API 클라이언트 회원가입 오류:', apiError);
+        const typedError = apiError as ApiError;
+        throw new Error(typedError.message || "회원가입 중 오류가 발생했습니다");
       }
-
-      // 회원가입 성공 시 리디렉션
-      router.push("/main");
-    } catch (error: any) {
-      setError(error.message || "회원가입 중 오류가 발생했습니다");
-      console.error(error);
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "회원가입 중 오류가 발생했습니다";
+      console.error('최종 오류:', errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -210,31 +219,6 @@ export default function SignUpForm() {
           <p className="text-sm font-medium text-destructive">{errors.confirmPassword.message}</p>
         )}
       </div>
-
-      <div className="space-y-2">
-        <div className="relative flex">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <BuildingIcon className="h-5 w-5 text-gray-400" />
-          </div>
-          <Select
-            defaultValue="CUSTOMER"
-            onValueChange={handleRoleChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full pl-10">
-              <SelectValue placeholder="역할 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CUSTOMER">일반 사용자</SelectItem>
-              <SelectItem value="STORE_OWNER">가게 사장님</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {errors.role && (
-          <p className="text-sm font-medium text-destructive">{errors.role.message}</p>
-        )}
-      </div>
-
       {error && (
         <div className="rounded-md bg-destructive/15 p-3">
           <p className="text-sm font-medium text-destructive">{error}</p>

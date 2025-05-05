@@ -172,7 +172,3 @@ const response = await fetch('/api/notifications/inventory', {
 
 1. 개발 환경에서는 알림 다이얼로그에 '테스트 알림 보내기' 버튼이 표시됩니다. 
    이 버튼을 클릭하여 실시간 알림 전송을 테스트할 수 있습니다.
-
-2. 가게 상세 페이지에서 구독 버튼을 클릭하여 구독 기능을 테스트할 수 있습니다.
-
-3. 구독 목록은 `/profile/subscriptions` 페이지에서 확인 및 관리할 수 있습니다. 
