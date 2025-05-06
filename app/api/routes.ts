@@ -30,6 +30,7 @@ export const USER_ROUTES = {
 export const INVENTORY_ROUTES = {
   BASE: '/inventory',
   DETAIL: (id: number) => `/inventory/${id}`,
+  TODAY: '/inventory',  // 오늘의 재고 조회 엔드포인트
 };
 
 // 예약 관련 엔드포인트
@@ -52,7 +53,7 @@ export const NOTIFICATION_ROUTES = {
 };
 
 // 외부 API의 기본 URL
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://43.201.108.28/v1/api/';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * 외부 API URL 형식화 함수
@@ -63,7 +64,7 @@ export function formatExternalApiUrl(endpoint: string): string {
     endpoint = endpoint.substring(1);
   }
   
-  if (API_BASE_URL.endsWith('/')) {
+  if (API_BASE_URL && API_BASE_URL.endsWith('/')) {
     return `${API_BASE_URL}${endpoint}`;
   } else {
     return `${API_BASE_URL}/${endpoint}`;
@@ -78,7 +79,7 @@ export function formatInternalApiUrl(path: string): string {
     path = path.substring(1);
   }
   
-  if (API_BASE_URL.endsWith('/')) {
+  if (API_BASE_URL && API_BASE_URL.endsWith('/')) {
     return `${API_BASE_URL}${path}`;
   } else {
     return `${API_BASE_URL}/${path}`;
@@ -151,6 +152,22 @@ export interface InventoryCreateRequest {
   price: number;
   quantity: number;
   availableTime: string;
+}
+
+// 오늘의 재고 조회 응답 타입
+export interface TodayInventoryItem {
+  inventory: {
+    id: number;
+    name: string;
+    price: number;
+    imageUrl: string;
+    startTime: string;
+    endTime: string;
+  };
+  store: {
+    name: string;
+    category: string;
+  };
 }
 
 export interface InventoryDetail {

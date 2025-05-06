@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { INVENTORY_ROUTES, formatExternalApiUrl } from '@/app/api/routes';
+import { INVENTORY_ROUTES, formatExternalApiUrl, InventoryCreateRequest, TodayInventoryItem } from '@/app/api/routes';
 import { getAuthToken } from '@/lib/auth/token';
 
 /**
  * 재고 생성 요청 인터페이스
  */
-interface InventoryCreateRequest {
+interface InventoryCreateRequestForm {
   name: string;
   description: string;
   price: number;
@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
     const token = await getAuthToken(request);
     
     // API 엔드포인트 구성
-    const apiEndpoint = formatExternalApiUrl(INVENTORY_ROUTES.BASE);
+    const apiEndpoint = formatExternalApiUrl(INVENTORY_ROUTES.TODAY);
     
     // 요청 헤더 구성
     const headers: Record<string, string> = {
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
     });
     
     // 응답 데이터 파싱
-    let responseData;
+    let responseData: TodayInventoryItem[];
     try {
       responseData = await response.json();
     } catch (parseError) {
@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       console.error('재고 목록 조회 실패:', responseData);
       return NextResponse.json(
-        { message: responseData.message || '재고 목록 조회 중 오류가 발생했습니다.' },
+        { message: '재고 목록 조회 중 오류가 발생했습니다.' },
         { status: response.status }
       );
     }

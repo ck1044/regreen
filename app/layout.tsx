@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AppWrapper from "@/components/layout/AppWrapper";
-// import AuthProvider from "@/components/auth/auth-provider";
+import AuthProvider from "@/components/auth/auth-provider";
 
 export const metadata: Metadata = {
   title: "리그린",
@@ -16,11 +16,11 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        {/* <AuthProvider> */}
+        <AuthProvider>
           <AppWrapper>
             {children}
           </AppWrapper>
-        {/* </AuthProvider> */}
+        </AuthProvider>
       </body>
     </html>
   );

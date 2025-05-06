@@ -2,53 +2,59 @@ import React from "react";
 import { ShopCard } from "@/components/custom/shop-card";
 // API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
 import { formatInternalApiUrl, STORE_ROUTES } from "@/app/api/routes";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth-options";
 
 // 가게 정보 인터페이스 정의
 interface ShopData {
-  id: string;
+  id: number;
   name: string;
-  imageUrl?: string;
-  image?: string;
-  address?: string;
-  location?: string;
-  category?: { name: string } | string;
-  distance?: string;
-  isNew?: boolean;
+  imageUrl?: string | null;
+  address?: string | null;
+  category: { id: number; name: string };
 }
 
-// API에서 반환되는 가게 타입
-interface ApiStore {
-  id: number | string;
-  name: string;
-  imageUrl?: string;
-  address?: string;
-  category?: {
-    id: number;
-    name: string;
-  };
-}
+
 
 // 가게 목록을 가져오는 비동기 함수
-async function getShops(): Promise<ShopData[]> {
+async function getShops(accessToken?: string): Promise<ShopData[]> {
   try {
+    // API URL 설정
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiEndpoint = `${baseUrl}store`;
+    console.log('API 엔드포인트:', apiEndpoint);
+    
     // 직접 API 호출로 가게 목록 요청
-    const response = await fetch(formatInternalApiUrl(STORE_ROUTES.BASE), {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // 토큰이 있는 경우 Authorization 헤더 추가
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    
+    const response = await fetch(apiEndpoint, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       cache: 'no-store'
     });
     
     if (!response.ok) {
-      console.error(`가게 목록 가져오기 실패: ${response.status}`);
-      return [];
+        // 401 오류는 인증 실패이므로 더미 데이터 사용
+        if (response.status === 401) {
+          console.log("인증 실패로 더미 데이터를 사용합니다.");
+          return [];
+        }
+        throw new Error(`가게 목록 가져오기 실패: ${response.status} - ${response.statusText}`);
+  
     }
     
     const shops = await response.json();
+    console.log('가져온 가게 데이터 수:', shops.length);
     
     // API 응답을 ShopData 형식으로 변환
-    return shops.map((shop: ApiStore) => ({
+    return shops.map((shop: ShopData) => ({
       id: shop.id.toString(),
       name: shop.name,
       imageUrl: shop.imageUrl,
@@ -63,44 +69,20 @@ async function getShops(): Promise<ShopData[]> {
 }
 
 export default async function ShopsPage() {
+  // 서버 세션 가져오기
+  const session = await getServerSession(authOptions);
+  
+  // 세션에서 액세스 토큰 가져오기
+  // @ts-ignore - accessToken 속성이 타입 정의에 없어서 무시
+  const accessToken = session?.user?.accessToken;
+  
+  // 토큰 존재 여부에 따라 다른 메시지 출력
+  console.log('사용자 로그인 상태:', session ? '로그인됨' : '로그인되지 않음');
+  console.log('토큰 존재 여부:', accessToken ? '있음' : '없음');
+  
   // API를 통해 가게 목록 가져오기
-  const shops = await getShops();
-  
-  // 가게 데이터가 없을 경우 더미 데이터 사용 (개발용)
-  const shopList: ShopData[] = shops.length > 0 ? shops : [
-    {
-      id: "1",
-      name: "맛있는 비건 레스토랑",
-      imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      address: "서울시 강남구",
-      category: { name: "비건" },
-      isNew: true
-    },
-    {
-      id: "2",
-      name: "유기농 마켓",
-      imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      address: "서울시 마포구",
-      category: { name: "마켓" },
-      distance: "1.5km"
-    },
-    {
-      id: "3",
-      name: "친환경 베이커리",
-      imageUrl: "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      address: "서울시 종로구",
-      category: { name: "베이커리" }
-    },
-    {
-      id: "4",
-      name: "로컬 푸드 카페",
-      imageUrl: "https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      address: "서울시 용산구",
-      category: { name: "카페" },
-      distance: "2.3km"
-    }
-  ];
-  
+  const shops = await getShops(accessToken);
+
   return (
     <div>
       {/* 인기 가게 섹션 */}
@@ -109,16 +91,14 @@ export default async function ShopsPage() {
           <h2 className="text-xl font-bold text-[#0f172a]">인기 가게</h2>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          {shopList.map((shop) => (
+          {shops.map((shop: ShopData) => (
             <ShopCard
               key={shop.id}
-              id={shop.id}
+              id={shop.id.toString()}
               name={shop.name}
-              image={shop.imageUrl || shop.image || ''} 
-              location={shop.address || shop.location || ''}
+              image={shop.imageUrl || ''} 
+              location={shop.address || ''}
               category={typeof shop.category === 'object' ? shop.category.name : shop.category}
-              distance={shop.distance}
-              isNew={shop.isNew}
             />
           ))}
         </div>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import NavigationBar from "@/components/layout/NavigationBar";
 import NotificationProvider from "@/components/notification/notification-provider";
+import { Toaster } from "sonner";
 
 type MobileLayoutProps = {
   children: ReactNode;
@@ -37,6 +38,7 @@ const MobileLayout = ({
       {!isAuthPage && <Header showBackButton={true} isOwner={isOwner} />}
       <main className="flex-1 overflow-auto pb-16">{children}</main>
       {!isAuthPage && <NavigationBar userRole={isOwner ? "shop" : "customer"} />}
+      <Toaster position="top-center" richColors />
     </div>
   );
 

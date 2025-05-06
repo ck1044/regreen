@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { InventoryCard } from '@/components/custom/inventory-card';
 import { formatInternalApiUrl, INVENTORY_ROUTES } from '@/app/api/routes';
+import { useSession } from "next-auth/react";
 
 // 상품 상태 타입
 type ProductStatus = 'in-stock' | 'low-stock' | 'out-of-stock';
@@ -42,6 +43,7 @@ interface Product {
   quantity: number;
   expiresAt?: string;
   status?: ProductStatus;
+  category: string;
 }
 
 // API 응답 타입
@@ -55,6 +57,11 @@ interface InventoryItem {
 }
 
 export default function InventoryPage() {
+  // 세션 가져오기
+  const { data: session } = useSession();
+  // @ts-ignore - accessToken 속성이 타입 정의에 없어서 무시
+  const accessToken = session?.user?.accessToken;
+  
   // 상태 관리
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,19 +74,29 @@ export default function InventoryPage() {
   // API에서 재고 데이터 가져오기
   useEffect(() => {
     const fetchInventory = async () => {
+      if (!session) return;
+      
       setIsLoading(true);
       setError(null);
       
       try {
         // 직접 API 호출로 재고 목록 요청
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+        
+        // 토큰이 있는 경우 Authorization 헤더 추가
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+        
         const response = await fetch(formatInternalApiUrl(INVENTORY_ROUTES.BASE), {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          },
+          headers,
           cache: 'no-store'
         });
+        console.log(response);
+        
         
         if (!response.ok) {
           throw new Error(`재고 목록 가져오기 실패: ${response.status}`);
@@ -89,14 +106,15 @@ export default function InventoryPage() {
         
         // API 응답 데이터를 컴포넌트에서 사용하는 형식으로 변환
         const transformedProducts = inventoryData.map(item => ({
-          id: item.id.toString(),
-          name: item.name,
+          id: item.id ? item.id.toString() : '0',
+          name: item.name || '',
           image: item.imageUrl || '/placeholder-food.jpg',
           shopName: '내 가게', // API에서 이 정보를 제공하지 않는 경우 기본값 사용
           shopId: '1', // API에서 이 정보를 제공하지 않는 경우 기본값 사용
           price: item.price,
           quantity: item.quantity,
-          expiresAt: item.endTime ? new Date(item.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '마감 정보 없음'
+          expiresAt: item.endTime ? new Date(item.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '마감 정보 없음',
+          category: '기타' // 기본 카테고리 값 추가
         }));
         
         setProducts(transformedProducts);
@@ -110,34 +128,35 @@ export default function InventoryPage() {
     };
     
     fetchInventory();
-  }, []);
+  }, [session, accessToken]);
   
-  // 상품 검색 처리
-  const filteredProducts = products.filter(product => {
-    // 검색어 필터링
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         product.shopName.toLowerCase().includes(searchQuery.toLowerCase());
+  // // 상품 검색 처리
+  // const filteredProducts = products.filter(product => {
+  //   // 검색어 필터링
+  //   const matchesSearch = searchQuery === '' || 
+  //                        (product.name && product.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+  //                        (product.shopName && product.shopName.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    // 상태 필터링
-    const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
+  //   // 상태 필터링
+  //   const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
-  });
+  //   return matchesSearch && matchesStatus;
+  // });
   
-  // 상품 삭제 처리
-  const handleDeleteProduct = (productId: string) => {
-    setProductToDelete(productId);
-    setDeleteDialogOpen(true);
-  };
+  // // 상품 삭제 처리
+  // const handleDeleteProduct = (productId: string) => {
+  //   setProductToDelete(productId);
+  //   setDeleteDialogOpen(true);
+  // };
   
-  // 상품 삭제 확인
-  const confirmDelete = () => {
-    if (productToDelete) {
-      // 실제 삭제 구현 필요
-      setDeleteDialogOpen(false);
-      setProductToDelete(null);
-    }
-  };
+  // // 상품 삭제 확인
+  // const confirmDelete = () => {
+  //   if (productToDelete) {
+  //     // 실제 삭제 구현 필요
+  //     setDeleteDialogOpen(false);
+  //     setProductToDelete(null);
+  //   }
+  // };
 
   // 로딩 중 UI
   if (isLoading) {
@@ -156,7 +175,7 @@ export default function InventoryPage() {
       <div className="container mx-auto p-4 pb-20">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">재고 관리</h1>
-          <Link href="/inventory/register">
+          <Link href="/manage-inventory/register">
             <Button className="bg-[#5DCA69] hover:bg-[#4db058]">
               <Plus className="mr-2 h-4 w-4" />
               제품 등록
@@ -165,7 +184,7 @@ export default function InventoryPage() {
         </div>
         
         {/* 검색 및 필터링 */}
-        <div className="mb-6 space-y-4">
+        {/* <div className="mb-6 space-y-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -195,7 +214,7 @@ export default function InventoryPage() {
             </Select>
           </div>
         </div>
-        
+         */}
         {/* 에러 메시지 */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4">
@@ -205,7 +224,7 @@ export default function InventoryPage() {
         
         {/* 재고 목록 */}
         <div>
-          {filteredProducts.length === 0 ? (
+          {products.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg text-center">
               <p className="text-gray-500 mb-4">
                 검색 결과가 없습니다.
@@ -218,7 +237,7 @@ export default function InventoryPage() {
             </div>
           ) : (
             <div>
-              {filteredProducts.map(product => (
+              {products.map(product => (
                 <InventoryCard
                   key={product.id}
                   id={product.id}
@@ -229,32 +248,13 @@ export default function InventoryPage() {
                   price={product.price}
                   quantity={product.quantity}
                   expiresAt={product.expiresAt}
+                  category={product.category}
                 />
               ))}
             </div>
           )}
         </div>
       </div>
-      
-      {/* 삭제 확인 다이얼로그 */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>제품 삭제</DialogTitle>
-            <DialogDescription>
-              이 제품을 정말 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              취소
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              삭제
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 } 

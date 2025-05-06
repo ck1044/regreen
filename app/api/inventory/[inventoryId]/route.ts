@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { INVENTORY_ROUTES, formatExternalApiUrl } from '@/app/api/routes';
+import { INVENTORY_ROUTES, formatExternalApiUrl, InventoryDetail } from '@/app/api/routes';
 import { getAuthToken } from '@/lib/auth/token';
 
 /**
@@ -44,7 +44,7 @@ export async function GET(
     });
     
     // 응답 데이터 파싱
-    let responseData;
+    let responseData: InventoryDetail;
     try {
       responseData = await response.json();
     } catch (parseError) {
@@ -63,7 +63,7 @@ export async function GET(
     if (!response.ok) {
       console.error('재고 상세 조회 실패:', responseData);
       return NextResponse.json(
-        { message: responseData.message || '재고 상세 조회 중 오류가 발생했습니다.' },
+        { message: '재고 상세 조회 중 오류가 발생했습니다.' },
         { status: response.status }
       );
     }

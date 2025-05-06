@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 // API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
-import { formatInternalApiUrl, RESERVATION_ROUTES, StoreOwnerReservation, ReservationStatusUpdateRequest } from "@/app/api/routes";
+import { formatInternalApiUrl, RESERVATION_ROUTES, ReservationStatusUpdateRequest } from "@/app/api/routes";
 import { formatDate, formatPrice, formatPickupTime, separateDateAndTime } from "@/lib/utils"; // 유틸리티 함수 임포트
 
 // 예약 상태 타입 (API 정의에 맞춤)

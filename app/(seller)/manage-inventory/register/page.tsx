@@ -15,7 +15,7 @@ import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
 import { formatInternalApiUrl, INVENTORY_ROUTES, InventoryCreateRequest } from "@/app/api/routes";
-
+import { useSession } from "next-auth/react";
 
 // 재고 등록 폼 유효성 검사 스키마
 const inventoryFormSchema = z.object({
@@ -36,7 +36,7 @@ const priceOptions = [
 ];
 
 // apiClient.inventory.create() 대체
-const createInventory = async (data: InventoryCreateRequest, image?: File | null) => {
+const createInventory = async (data: InventoryCreateRequest, image?: File | null, token?: string) => {
   try {
     const formData = new FormData();
     
@@ -50,10 +50,15 @@ const createInventory = async (data: InventoryCreateRequest, image?: File | null
       formData.append('file', image);
     }
     
+    // 토큰이 없으면 에러 발생
+    if (!token) {
+      throw new Error('인증 토큰이 필요합니다');
+    }
+    
     const response = await fetch(formatInternalApiUrl(INVENTORY_ROUTES.BASE), {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
       body: formData,
     });
@@ -73,6 +78,7 @@ export default function InventoryRegisterPage() {
   const router = useRouter();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { data: session } = useSession();
   
   // 폼 설정
   const form = useForm<InventoryFormValues>({
@@ -104,21 +110,30 @@ export default function InventoryRegisterPage() {
       console.log("재고 등록 데이터:", values);
       console.log("선택된 이미지:", selectedFile);
       
+      // @ts-ignore - accessToken 속성이 타입 정의에 없어서 무시
+      const accessToken = session?.user?.accessToken;
+      
+      if (!accessToken) {
+        alert('로그인이 필요합니다.');
+        router.push('/auth/signin');
+        return;
+      }
+      
       // apiClient를 사용하여 재고 생성 요청
       try {
         await createInventory({
           name: values.name,
           description: values.description,
           price: parseFloat(values.price),
-          quantity: parseInt(values.quantity),
+          quantity: values.quantity,
           availableTime: new Date().toISOString() // 예시: 현재 시간 사용 (실제로는 적절한 시간 포맷 사용)
-        }, selectedFile);
+        }, selectedFile, accessToken);
         
         // 성공 시 재고 관리 페이지로 이동
-        router.push('/inventory');
+        router.push('/manage-inventory');
       } catch (error) {
         console.error("API 요청 중 오류 발생:", error);
-        // 실패 시 적절한 에러 처리
+        alert("재고 등록에 실패했습니다. 다시 시도해 주세요.");
       }
     } catch (error) {
       console.error("재고 등록 중 오류 발생:", error);

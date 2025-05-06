@@ -29,7 +29,7 @@
 // API 설정
 export const API_CONFIG = {
   // API 기본 URL
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://43.201.108.28/v1/api/",
+  baseUrl: process.env.NEXT_PUBLIC_API_URL,
   
   // 기본 헤더
   headers: {

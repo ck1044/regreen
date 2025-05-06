@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,14 +26,40 @@ import Link from "next/link";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
-import { formatInternalApiUrl, RESERVATION_ROUTES, CustomerReservation } from "@/app/api/routes";
-import { formatDate, formatPrice, formatPickupTime, separateDateAndTime } from "@/lib/utils"; // 유틸리티 함수 임포트
+import { formatInternalApiUrl, RESERVATION_ROUTES } from "@/app/api/routes";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import dayjs from "dayjs";
+import 'dayjs/locale/ko';
 
-// 예약 상태 타입 (API 정의에 맞춤)
+// 한국어 설정
+dayjs.locale('ko');
+
+// 날짜 및 시간 포맷 함수
+const formatDate = (dateString: string) => {
+  return dayjs(dateString).format('YYYY년 MM월 DD일');
+};
+
+const formatTime = (dateString: string) => {
+  return dayjs(dateString).format('HH:mm');
+};
+
+// 날짜와 시간 분리
+const separateDateAndTime = (dateString: string) => {
+  const date = dayjs(dateString).format('YYYY년 MM월 DD일');
+  const time = dayjs(dateString).format('HH:mm');
+  return { date, time };
+};
+
+// 가격 포맷 함수
+const formatPrice = (price: number) => {
+  return price.toLocaleString();
+};
+
+// 예약 상태 타입
 type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 
-// 예약 정보 타입 (API 정의에 맞춤)
+// 예약 정보 타입
 interface Reservation {
   id: number;
   inventoryImage: string;
@@ -42,6 +67,7 @@ interface Reservation {
   inventoryPrice: number;
   storeName: string;
   storeAddress: string;
+  storeCategory: string;
   amount: number;
   pickUpTime: string;
   status: ReservationStatus;
@@ -53,74 +79,60 @@ const statusBadgeConfig = {
   'PENDING': { color: 'bg-yellow-100 text-yellow-800', text: '승인 대기' },
   'CONFIRMED': { color: 'bg-blue-100 text-blue-800', text: '예약 확정' },
   'COMPLETED': { color: 'bg-green-100 text-green-800', text: '픽업 완료' },
-  'CANCELLED': { color: 'bg-red-100 text-red-800', text: '예약 취소' },
-};
-
-// apiClient.reservation.getCustomerReservations() 대체
-const fetchCustomerReservations = async () => {
-  try {
-    const response = await fetch(formatInternalApiUrl(RESERVATION_ROUTES.CUSTOMER), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      throw new Error(`예약 목록 가져오기 실패: ${response.status}`);
-    }
-    
-    return await response.json() as CustomerReservation[];
-  } catch (error) {
-    console.error('예약 목록 가져오기 오류:', error);
-    return [];
-  }
-};
-
-// 예약 상태 업데이트 함수 추가
-const updateReservationStatus = async (reservationId: number, status: string) => {
-  try {
-    const response = await fetch(formatInternalApiUrl(RESERVATION_ROUTES.UPDATE_STATUS(reservationId)), {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-      body: JSON.stringify({ status }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`예약 상태 업데이트 실패: ${response.status}`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('예약 상태 업데이트 오류:', error);
-    return false;
-  }
+  'CANCELLED': { color: 'bg-red-100 text-red-800', text: '예약 거절' },
 };
 
 export default function MyReservationsPage() {
+  // 세션 가져오기
+  const { data: session } = useSession();
+  // @ts-ignore - accessToken 속성이 타입 정의에 없어서 무시
+  const accessToken = session?.user?.accessToken;
+  
   // 상태 관리
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [reservationToCancel, setReservationToCancel] = useState<string | null>(null);
+  const [reservationToCancel, setReservationToCancel] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // API를 사용하여 예약 목록 가져오기
   const fetchReservations = useCallback(async () => {
+    if (!session) return;
+    
     setIsLoading(true);
     setError(null);
 
     try {
-      // API 클라이언트를 사용하여 고객 예약 목록 요청
-      const reservationData = await fetchCustomerReservations();
-      setReservations(reservationData);
+      // 요청 헤더 구성
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      // 토큰이 있으면 헤더에 추가
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      } else {
+        throw new Error('인증 토큰이 없습니다.');
+      }
+      
+      // API 엔드포인트 구성
+      const apiEndpoint = formatInternalApiUrl(RESERVATION_ROUTES.CUSTOMER);
+      
+      // API 호출
+      const response = await fetch(apiEndpoint, {
+        method: 'GET',
+        headers,
+        cache: 'no-store'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`예약 목록 가져오기 실패: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setReservations(data);
     } catch (err) {
       console.error('예약 목록 가져오기 오류:', err);
       setError('예약 정보를 불러오는 중 오류가 발생했습니다.');
@@ -128,52 +140,66 @@ export default function MyReservationsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [session, accessToken]);
   
   // 예약 목록 가져오기
   useEffect(() => {
     fetchReservations();
   }, [fetchReservations]);
 
-
-
   // 예약 필터링
-  const filteredReservations = reservations.filter(reservation => {
-    // 검색어 필터링
-    const matchesSearch = 
-      reservation.inventoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      reservation.storeName.toLowerCase().includes(searchQuery.toLowerCase());
+  // const filteredReservations = reservations.filter(reservation => {
+  //   // 검색어 필터링
+  //   const matchesSearch = 
+  //     reservation.inventoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     reservation.storeName.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // 탭 필터링
-    const matchesTab = 
-      selectedTab === "all" || 
-      (selectedTab === "pending" && reservation.status === "PENDING") ||
-      (selectedTab === "confirmed" && reservation.status === "CONFIRMED") ||
-      (selectedTab === "completed" && reservation.status === "COMPLETED") ||
-      (selectedTab === "cancelled" && reservation.status === "CANCELLED");
+  //   // 탭 필터링
+  //   const matchesTab = 
+  //     selectedTab === "all" || 
+  //     (selectedTab === "pending" && reservation.status === "PENDING") ||
+  //     (selectedTab === "confirmed" && reservation.status === "CONFIRMED") ||
+  //     (selectedTab === "completed" && reservation.status === "COMPLETED") ||
+  //     (selectedTab === "cancelled" && reservation.status === "CANCELLED");
     
-    return matchesSearch && matchesTab;
-  });
+  //   return matchesSearch && matchesTab;
+  // });
 
   // 예약 취소 처리
   const handleCancelReservation = async () => {
-    if (!reservationToCancel) return;
+    if (!reservationToCancel || !accessToken) return;
     
     try {
-      // API 클라이언트를 사용하여 예약 취소 요청
-      await updateReservationStatus(parseInt(reservationToCancel), 'CANCELLED');
+      // API 엔드포인트 구성
+      const apiEndpoint = formatInternalApiUrl(RESERVATION_ROUTES.UPDATE_STATUS(reservationToCancel));
+      
+      // API 호출
+      const response = await fetch(apiEndpoint, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ status: 'CANCELLED' })
+      });
+      
+      if (!response.ok) {
+        throw new Error('예약 취소 실패');
+      }
       
       // 상태 업데이트
       setReservations(prev => 
         prev.map(reservation => 
-          reservation.id === parseInt(reservationToCancel)
+          reservation.id === reservationToCancel
             ? { ...reservation, status: 'CANCELLED' }
             : reservation
         )
       );
+      
+      toast.success('예약이 취소되었습니다.');
     } catch (err) {
       console.error('예약 취소 오류:', err);
-      setError('예약 취소 중 오류가 발생했습니다');
+      toast.error('예약 취소 중 오류가 발생했습니다.');
     } finally {
       setCancelDialogOpen(false);
       setReservationToCancel(null);
@@ -182,31 +208,31 @@ export default function MyReservationsPage() {
 
   // 예약 취소 다이얼로그 열기
   const openCancelDialog = (id: number) => {
-    setReservationToCancel(id.toString());
+    setReservationToCancel(id);
     setCancelDialogOpen(true);
   };
 
   // 로딩 중 UI
   if (isLoading) {
     return (
-        <div className="container mx-auto p-4 flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-primary" />
-            <p>예약 정보를 불러오는 중...</p>
-          </div>
+      <div className="container mx-auto p-4 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-primary" />
+          <p>예약 정보를 불러오는 중...</p>
         </div>
+      </div>
     );
   }
 
   return (
-<div>
+    <div>
       <div className="container mx-auto p-4 pb-20">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">내 예약</h1>
         </div>
         
         {/* 검색 */}
-        <div className="mb-6 space-y-4">
+        {/* <div className="mb-6 space-y-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Input 
@@ -219,7 +245,7 @@ export default function MyReservationsPage() {
               <Filter className="h-4 w-4" />
             </Button>
           </div>
-        </div>
+        </div> */}
         
         {/* 에러 메시지 */}
         {error && (
@@ -229,7 +255,7 @@ export default function MyReservationsPage() {
         )}
         
         {/* 탭 필터 */}
-        <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab} className="mb-6">
+        {/* <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab} className="mb-6">
           <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="all">전체</TabsTrigger>
             <TabsTrigger value="pending">대기</TabsTrigger>
@@ -237,34 +263,34 @@ export default function MyReservationsPage() {
             <TabsTrigger value="completed">완료</TabsTrigger>
             <TabsTrigger value="cancelled">취소</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs> */}
         
         {/* 예약 목록 */}
         <div className="space-y-4">
-          {filteredReservations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 bg-gray-50 bg-gray-800 rounded-lg text-center">
-              <p className="text-gray-500 text-gray-400 mb-4">
+          {reservations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg text-center">
+              <p className="text-gray-500 mb-4">
                 예약 내역이 없습니다.
               </p>
-              <Link href="/">
+              <Link href="/main">
                 <Button className="bg-[#5DCA69] hover:bg-[#4db058]">
                   상품 보러가기
                 </Button>
               </Link>
             </div>
           ) : (
-            filteredReservations.map(reservation => {
+            reservations.map(reservation => {
               const { date, time } = separateDateAndTime(reservation.pickUpTime);
               return (
                 <Card key={reservation.id} className="overflow-hidden">
                   <CardContent className="p-0">
-                    <Link href={`/reservations/${reservation.id}`}>
+                    <Link href={`/my-reservations/${reservation.id}`}>
                       <div className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <Badge className={statusBadgeConfig[reservation.status].color}>
                             {statusBadgeConfig[reservation.status].text}
                           </Badge>
-                          <span className="text-sm text-gray-600 text-gray-400">
+                          <span className="text-sm text-gray-600">
                             {formatDate(reservation.createdAt)}
                           </span>
                         </div>
@@ -272,7 +298,7 @@ export default function MyReservationsPage() {
                         <div className="flex items-center mb-3">
                           <div className="relative h-16 w-16 rounded-md overflow-hidden bg-gray-100 mr-4 flex-shrink-0">
                             <Image 
-                              src={reservation.inventoryImage} 
+                              src={reservation.inventoryImage || '/placeholder-food.jpg'} 
                               alt={reservation.inventoryName}
                               fill
                               className="object-cover"
@@ -308,19 +334,12 @@ export default function MyReservationsPage() {
                       </div>
                     </Link>
                     
-                    {/* 예약 관리 버튼 (대기, 확정 상태일 때만 취소 가능) */}
-                    {(reservation.status === 'PENDING' || reservation.status === 'CONFIRMED') && (
-                      <div className="px-4 py-3 bg-gray-50 border-t">
-                        <Button 
-                          variant="outline" 
-                          className="w-full text-red-500 border-red-200 hover:bg-red-50"
-                          onClick={() => openCancelDialog(reservation.id)}
-                        >
-                          <Ban className="h-4 w-4 mr-2" />
-                          예약 취소
-                        </Button>
+                    {/* 예약 상태 표시 */}
+                    <div className="px-4 py-3 bg-gray-50 border-t ">
+                      <div className="text-center font-medium">
+                        {statusBadgeConfig[reservation.status].text}
                       </div>
-                    )}
+                    </div>
                   </CardContent>
                 </Card>
               );
@@ -328,29 +347,6 @@ export default function MyReservationsPage() {
           )}
         </div>
       </div>
-      
-      {/* 예약 취소 확인 다이얼로그 */}
-      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>예약 취소</DialogTitle>
-            <DialogDescription>
-              정말로 이 예약을 취소하시겠습니까? 이 작업은 되돌릴 수 없습니다.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
-              취소
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={handleCancelReservation}
-            >
-              예약 취소하기
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      </div>
+    </div>
   );
 } 

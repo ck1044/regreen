@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LockIcon, MailIcon, Loader2 } from "lucide-react";
 import { formatInternalApiUrl, AUTH_ROUTES, SigninRequest, UserProfile } from "@/app/api/routes";
+import { saveToken, removeToken } from "@/lib/auth/token-manager";
 
 // 로그인 유효성 검사 스키마
 const signInSchema = z.object({
@@ -35,6 +36,36 @@ export default function SignInForm() {
       password: "",
     },
   });
+
+  // 토큰 이벤트 리스너 설정
+  useEffect(() => {
+    // auth:token-received 이벤트 핸들러
+    const handleTokenReceived = (event: CustomEvent<{ accessToken: string }>) => {
+      const { accessToken } = event.detail;
+      if (accessToken) {
+        // 토큰 관리자를 통해 토큰 저장
+        saveToken(accessToken);
+        console.log('액세스 토큰이 저장되었습니다.');
+      }
+    };
+
+    // auth:signout 이벤트 핸들러
+    const handleSignOut = () => {
+      // 토큰 관리자를 통해 토큰 삭제
+      removeToken();
+      console.log('액세스 토큰이 삭제되었습니다.');
+    };
+
+    // 이벤트 리스너 등록
+    window.addEventListener('auth:token-received', handleTokenReceived as EventListener);
+    window.addEventListener('auth:signout', handleSignOut);
+
+    // 클린업 함수
+    return () => {
+      window.removeEventListener('auth:token-received', handleTokenReceived as EventListener);
+      window.removeEventListener('auth:signout', handleSignOut);
+    };
+  }, []);
 
   // 사용자 프로필 정보 가져오기
   const fetchUserProfile = async (token: string): Promise<UserProfile | null> => {
@@ -86,9 +117,9 @@ export default function SignInForm() {
       
       const authResponse = await response.json();
       
-      // 로컬 스토리지에 토큰 저장
-      if (typeof window !== 'undefined' && authResponse.accessToken) {
-        localStorage.setItem('accessToken', authResponse.accessToken);
+      // 토큰 관리자를 통해 토큰 저장
+      if (authResponse.accessToken) {
+        saveToken(authResponse.accessToken);
       }
       
       // NextAuth를 통한 세션 설정도 함께 진행 (선택적)
@@ -101,12 +132,14 @@ export default function SignInForm() {
       // 사용자 프로필 정보 가져오기
       const userProfile = await fetchUserProfile(authResponse.accessToken);
       
-      // 로그인 성공 후 리다이렉트 (관리자인 경우 관리자 페이지로)
+      // 로그인 성공 후 역할에 따라 다른 페이지로 리다이렉트
       if (userProfile?.role === 'ADMIN') {
         router.push("/admin");
+      } else if (userProfile?.role === 'STORE_OWNER') {
+        router.push("/inventory");
       } else {
-        router.refresh();
-        router.push("/");
+        // 기본적으로 고객은 메인 페이지로
+        router.push("/main");
       }
       
     } catch (error) {
@@ -126,9 +159,16 @@ export default function SignInForm() {
           return;
         }
 
-        // 로그인 성공 시 리디렉션
-        router.refresh();
-        router.push("/main");
+        // 로그인 성공 시 리디렉션 (NextAuth는 유저 정보가 있는 세션이 설정된 후)
+        const session = await fetch('/api/auth/session');
+        const sessionData = await session.json();
+
+        if (sessionData?.user?.role === 'STORE_OWNER') {
+          router.push("/inventory");
+        } else {
+          // 기본적으로 고객은 메인 페이지로
+          router.push("/main");
+        }
       } catch (nextAuthError) {
         setError("로그인 중 오류가 발생했습니다");
         console.error(nextAuthError);

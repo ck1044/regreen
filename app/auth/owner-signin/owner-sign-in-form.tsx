@@ -9,9 +9,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LockIcon, MailIcon, Loader2, Store } from "lucide-react";
-// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
-import { formatInternalApiUrl, AUTH_ROUTES, USER_ROUTES, SigninRequest, UserProfile } from "@/app/api/routes";
+import { formatInternalApiUrl, AUTH_ROUTES, USER_ROUTES } from "@/app/api/routes";
 import { toast } from "sonner";
+import { saveToken } from "@/lib/auth/token-manager";
 
 // 로그인 유효성 검사 스키마
 const signInSchema = z.object({
@@ -21,11 +21,14 @@ const signInSchema = z.object({
 
 type SignInFormValues = z.infer<typeof signInSchema>;
 
-// apiError에 대한 타입 정의
-interface ApiError {
-  message: string;
-  status?: number;
-  [key: string]: unknown;
+// 사용자 프로필 타입
+interface UserProfileData {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  phoneNumber?: string;
+  profileImage?: string;
 }
 
 export default function OwnerSignInForm() {
@@ -46,7 +49,7 @@ export default function OwnerSignInForm() {
   });
 
   // 사용자 프로필 정보 가져오기
-  const fetchUserProfile = async (token: string): Promise<UserProfile | null> => {
+  const fetchUserProfile = async (token: string): Promise<UserProfileData | null> => {
     try {
       const response = await fetch(formatInternalApiUrl(USER_ROUTES.PROFILE), {
         method: 'GET',
@@ -57,7 +60,7 @@ export default function OwnerSignInForm() {
       });
       
       if (!response.ok) {
-        return null;
+        throw new Error('프로필 정보를 가져오는 데 실패했습니다.');
       }
       
       const userProfile = await response.json();
@@ -65,24 +68,28 @@ export default function OwnerSignInForm() {
       // 로컬 스토리지에 프로필 저장
       localStorage.setItem('userProfile', JSON.stringify(userProfile));
       
-      return userProfile as UserProfile;
+      return userProfile as UserProfileData;
     } catch (error) {
       console.error('사용자 프로필 가져오기 오류:', error);
-      return null;
+      throw new Error('프로필 정보를 가져오는 데 실패했습니다.');
     }
   };
   
   // 로그아웃 처리
-  const signOut = () => {
+  const handleSignOut = () => {
     // 토큰과 사용자 프로필 제거
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userProfile');
+    
+    // nextauth 세션 제거 이벤트 발생
+    const signOutEvent = new Event('auth:signout');
+    window.dispatchEvent(signOutEvent);
   };
 
   async function onSubmit(data: SignInFormValues) {
     setIsLoading(true);
     setError(null);
-    console.log("로그인 시도:", data.email);
+    console.log("사장님 로그인 시도:", data.email);
 
     try {
       // API 직접 호출
@@ -103,17 +110,21 @@ export default function OwnerSignInForm() {
       
       const authResponse = await response.json();
       
-      // 로컬 스토리지에 토큰 저장
-      if (typeof window !== 'undefined' && authResponse.accessToken) {
-        localStorage.setItem('accessToken', authResponse.accessToken);
+      if (!authResponse.accessToken) {
+        throw new Error('인증 토큰을 받지 못했습니다');
       }
       
-      // NextAuth를 통한 세션 설정도 함께 진행 (선택적)
-      await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
+      // 로컬 스토리지에 토큰 저장
+      localStorage.setItem('accessToken', authResponse.accessToken);
+            // 토큰 관리자를 통해 토큰 저장
+            if (authResponse.accessToken) {
+              saveToken(authResponse.accessToken);
+            }
+      // 토큰 수신 이벤트 발생
+      const tokenEvent = new CustomEvent('auth:token-received', {
+        detail: { accessToken: authResponse.accessToken }
       });
+      window.dispatchEvent(tokenEvent);
       
       // 사용자 프로필 정보 가져오기
       const userProfile = await fetchUserProfile(authResponse.accessToken);
@@ -121,20 +132,41 @@ export default function OwnerSignInForm() {
       // 사장님 계정 체크
       if (userProfile?.role !== 'STORE_OWNER') {
         // 사장님 계정이 아니면 로그아웃 처리
-        signOut();
+        handleSignOut();
         throw new Error('사장님 계정으로만 로그인할 수 있습니다');
       }
       
+      // NextAuth를 통한 세션 설정도 함께 진행
+      const signInResult = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+      
+      if (signInResult?.error) {
+        throw new Error('세션 설정에 실패했습니다');
+      }
+      
       // 로그인 성공 후 리다이렉트
-      toast.success("로그인 성공! 사장님 관리 페이지로 이동합니다.");
+      toast.success("사장님 로그인 성공!", {
+        description: "사장님 관리 페이지로 이동합니다."
+      });
+      
+      // 페이지 새로고침 후 이동
       router.refresh();
-      router.push("/inventory");
+      router.push("/manage-inventory");
+      
     } catch (error) {
-      console.error("로그인 중 예상치 못한 오류:", error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "로그인 중 오류가 발생했습니다";
-      setError(`로그인 중 오류가 발생했습니다: ${errorMessage}`);
+      console.error("로그인 오류:", error);
+      
+      // 로그아웃 처리
+      handleSignOut();
+      
+      const errorMessage = error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다";
+      setError(errorMessage);
+      toast.error("로그인 실패", {
+        description: errorMessage
+      });
     } finally {
       setIsLoading(false);
     }
@@ -185,8 +217,8 @@ export default function OwnerSignInForm() {
       </div>
 
       {error && (
-        <div className="rounded-md bg-destructive/15 p-3">
-          <p className="text-sm font-medium text-destructive">{error}</p>
+        <div className="rounded-md bg-red-50 p-3">
+          <p className="text-sm font-medium text-red-700">{error}</p>
         </div>
       )}
 

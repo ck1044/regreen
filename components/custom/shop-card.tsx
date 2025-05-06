@@ -11,7 +11,6 @@ type ShopCardProps = {
   location: string;
   category?: string;
   distance?: string;
-  isNew?: boolean;
   className?: string;
 };
 
@@ -22,7 +21,6 @@ const ShopCard = ({
   location,
   category,
   distance,
-  isNew = false,
   className,
 }: ShopCardProps) => {
   return (
@@ -39,11 +37,7 @@ const ShopCard = ({
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 50vw"
           />
-          {isNew && (
-            <div className="absolute top-2 left-2 bg-[#5DCA69] text-white text-xs px-2 py-1 rounded-full">
-              NEW
-            </div>
-          )}
+
           {category && (
             <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
               {category}

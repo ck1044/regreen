@@ -16,6 +16,7 @@ declare module "next-auth" {
     email: string;
     name: string;
     role: string;
+    accessToken?: string; // 액세스 토큰 추가
   }
   
   interface Session {
@@ -24,6 +25,7 @@ declare module "next-auth" {
       email: string;
       name: string;
       role: string;
+      accessToken?: string; // 액세스 토큰을 세션에도 포함
     };
   }
 }
@@ -34,6 +36,32 @@ declare module "next-auth/jwt" {
     email: string;
     name: string;
     role: string;
+    accessToken?: string; // JWT에 액세스 토큰 추가
+  }
+}
+
+// 사용자 프로필을 가져오는 함수
+async function fetchUserProfile(accessToken: string) {
+  try {
+    const response = await fetch(`${API_URL}user/profile`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+    });
+    
+    if (!response.ok) {
+      console.error('프로필 가져오기 실패:', response.status);
+      return null;
+
+    }
+
+
+    return await response.json();
+  } catch (error) {
+    console.error('프로필 요청 오류:', error);
+    return null;
   }
 }
 
@@ -45,7 +73,7 @@ export const authOptions: NextAuthOptions = {
   // 세션 설정
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30일
+    maxAge: 24 * 60 * 60, // 24시간 (1일)
   },
   
   // 페이지 설정
@@ -93,15 +121,17 @@ export const authOptions: NextAuthOptions = {
           
           // API 응답에서 토큰과 사용자 정보 가져오기
           if (data.accessToken) {
-            // 액세스 토큰은 JWT 콜백에서 별도로 처리 (쿠키 세팅은 클라이언트에서 처리)
-            console.log('로그인 성공: 토큰 및 사용자 정보 반환');
+            console.log('로그인 성공: 토큰 받음');
             
+            // 토큰을 이용해 사용자 프로필 정보 가져오기
+            const userProfile = await fetchUserProfile(data.accessToken);
+            console.log(userProfile);
             // 사용자 정보 반환
             return {
-              id: data.user?.id || 'user-id',
-              email: data.user?.email || credentials.email,
-              name: data.user?.name || '사용자',
-              role: data.user?.role || 'CUSTOMER',
+              id: userProfile?.id || data.user?.id || 'user-id',
+              email: userProfile?.email || data.user?.email || credentials.email,
+              name: userProfile?.name || data.user?.name || '사용자',
+              role: userProfile?.role || data.user?.role || 'CUSTOMER',
               accessToken: data.accessToken, // 토큰을 user 객체에 포함시킴
             };
           }
@@ -119,7 +149,7 @@ export const authOptions: NextAuthOptions = {
   // JWT 콜백 설정
   callbacks: {
     // JWT 토큰에 사용자 정보 추가
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         console.log('JWT 토큰 생성:', user);
         token.id = user.id;
@@ -129,6 +159,19 @@ export const authOptions: NextAuthOptions = {
         // 액세스 토큰도 JWT에 포함시킴
         if ('accessToken' in user) {
           token.accessToken = user.accessToken;
+        }
+      } else if (token.accessToken) {
+        // 토큰 재발급 또는 세션 유지할 때 프로필 정보 업데이트
+        try {
+          const userProfile = await fetchUserProfile(token.accessToken as string);
+          if (userProfile) {
+            token.id = userProfile.id || token.id;
+            token.email = userProfile.email || token.email;
+            token.name = userProfile.name || token.name;
+            token.role = userProfile.role || token.role;
+          }
+        } catch (error) {
+          console.error('토큰 갱신 중 프로필 가져오기 실패:', error);
         }
       }
       return token;
@@ -141,9 +184,30 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email;
         session.user.name = token.name;
         session.user.role = token.role;
-        // 액세스 토큰은 보안상 세션에 포함하지 않음
+        // 액세스 토큰을 세션에도 포함시킴 (클라이언트에서 사용 가능)
+        session.user.accessToken = token.accessToken;
       }
       return session;
+    },
+  },
+  
+  // 이벤트 핸들러
+  events: {
+    async signIn({ user }) {
+      // 로그인 성공 이벤트 (클라이언트에서 처리할 수 있도록 window 객체에 이벤트 발생)
+      if (user.accessToken && typeof window !== 'undefined') {
+        // 토큰을 저장하는 이벤트 발생 - 클라이언트 측에서 처리
+        const event = new CustomEvent('auth:token-received', { 
+          detail: { accessToken: user.accessToken } 
+        });
+        window.dispatchEvent(event);
+      }
+    },
+    async signOut() {
+      // 로그아웃 이벤트 (토큰 삭제 이벤트 발생)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth:signout'));
+      }
     },
   },
   
