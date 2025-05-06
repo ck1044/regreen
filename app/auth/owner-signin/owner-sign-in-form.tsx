@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LockIcon, MailIcon, Loader2, Store } from "lucide-react";
-import apiClient from "@/lib/api"; // API 클라이언트 임포트
+// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
+import { formatInternalApiUrl, AUTH_ROUTES, USER_ROUTES, SigninRequest, UserProfile } from "@/app/api/routes";
 import { toast } from "sonner";
 
 // 로그인 유효성 검사 스키마
@@ -44,27 +45,38 @@ export default function OwnerSignInForm() {
     },
   });
 
-  // 사용자 프로필 정보 확인 및 역할 체크
-  const checkUserRole = async () => {
+  // 사용자 프로필 정보 가져오기
+  const fetchUserProfile = async (token: string): Promise<UserProfile | null> => {
     try {
-      console.log("사용자 프로필 정보 확인 중...");
-      const userProfile = await apiClient.user.getProfile();
-      console.log("사용자 프로필:", userProfile);
+      const response = await fetch(formatInternalApiUrl(USER_ROUTES.PROFILE), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-      // 사장님(STORE_OWNER)이 아닌 경우 에러 표시
-      if (userProfile.role !== 'STORE_OWNER') {
-        console.error("사장님 계정이 아님:", userProfile.role);
-        setError("사장님 계정이 아닙니다. 일반 회원 로그인을 이용해주세요.");
-        apiClient.auth.signout(); // 로그아웃 처리
-        return false;
+      if (!response.ok) {
+        return null;
       }
       
-      console.log("사장님 계정 확인 완료");
-      return true;
+      const userProfile = await response.json();
+      
+      // 로컬 스토리지에 프로필 저장
+      localStorage.setItem('userProfile', JSON.stringify(userProfile));
+      
+      return userProfile as UserProfile;
     } catch (error) {
-      console.error('사용자 프로필 확인 오류:', error);
-      return false;
+      console.error('사용자 프로필 가져오기 오류:', error);
+      return null;
     }
+  };
+  
+  // 로그아웃 처리
+  const signOut = () => {
+    // 토큰과 사용자 프로필 제거
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userProfile');
   };
 
   async function onSubmit(data: SignInFormValues) {
@@ -73,65 +85,50 @@ export default function OwnerSignInForm() {
     console.log("로그인 시도:", data.email);
 
     try {
-      // API 클라이언트를 사용한 로그인 시도
-      try {
-        console.log("API 클라이언트로 로그인 시도...");
-        const authResponse = await apiClient.auth.signin(data);
-        console.log("API 로그인 성공:", authResponse);
-        
-        // 로그인 성공 후 사용자 역할 확인
-        const isStoreOwner = await checkUserRole();
-        
-        if (!isStoreOwner) {
-          // 이미 에러 메시지가 설정되었고 로그아웃 처리되었음
-          setIsLoading(false);
-          return;
-        }
-        
-        // 사장님인 경우 관리 페이지로 이동
-        toast.success("로그인 성공! 사장님 관리 페이지로 이동합니다.");
-        router.refresh();
-        router.push("/inventory"); // 재고 관리 페이지로 이동
-        return;
-      } catch (apiError) {
-        console.error("API 로그인 오류:", apiError);
-        
-        // NextAuth 를 통한 로그인 시도
-        console.log("NextAuth로 로그인 시도...");
-        const signInResult = await signIn("credentials", {
-          email: data.email,
-          password: data.password,
-          redirect: false,
-        });
-        
-        console.log("NextAuth 로그인 결과:", signInResult);
-        
-        if (signInResult?.error) {
-          console.error("NextAuth 로그인 오류:", signInResult.error);
-          setError("이메일 또는 비밀번호가 올바르지 않습니다");
-          return;
-        }
-        
-        if (signInResult?.ok) {
-          // 로그인 성공 후 사용자 역할 확인
-          const isStoreOwner = await checkUserRole();
-          
-          if (!isStoreOwner) {
-            // 이미 에러 메시지가 설정되었고 로그아웃 처리되었음
-            return;
-          }
-          
-          // 사장님인 경우 관리 페이지로 이동
-          toast.success("로그인 성공! 사장님 관리 페이지로 이동합니다.");
-          router.refresh();
-          router.push("/inventory"); // 재고 관리 페이지로 이동
-          return;
-        }
-        
-        // API 로그인이 실패한 경우 에러 메시지 표시
-        const typedError = apiError as ApiError;
-        setError(typedError.message || "이메일 또는 비밀번호가 올바르지 않습니다");
+      // API 직접 호출
+      const loginUrl = formatInternalApiUrl(AUTH_ROUTES.SIGNIN);
+      
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '로그인 중 오류가 발생했습니다');
       }
+      
+      const authResponse = await response.json();
+      
+      // 로컬 스토리지에 토큰 저장
+      if (typeof window !== 'undefined' && authResponse.accessToken) {
+        localStorage.setItem('accessToken', authResponse.accessToken);
+      }
+      
+      // NextAuth를 통한 세션 설정도 함께 진행 (선택적)
+      await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+      
+      // 사용자 프로필 정보 가져오기
+      const userProfile = await fetchUserProfile(authResponse.accessToken);
+      
+      // 사장님 계정 체크
+      if (userProfile?.role !== 'STORE_OWNER') {
+        // 사장님 계정이 아니면 로그아웃 처리
+        signOut();
+        throw new Error('사장님 계정으로만 로그인할 수 있습니다');
+      }
+      
+      // 로그인 성공 후 리다이렉트
+      toast.success("로그인 성공! 사장님 관리 페이지로 이동합니다.");
+      router.refresh();
+      router.push("/inventory");
     } catch (error) {
       console.error("로그인 중 예상치 못한 오류:", error);
       const errorMessage = error instanceof Error 

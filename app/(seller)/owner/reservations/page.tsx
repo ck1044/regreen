@@ -28,7 +28,8 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import apiClient from "@/lib/api"; // API 클라이언트 임포트
+// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
+import { formatInternalApiUrl, RESERVATION_ROUTES, StoreOwnerReservation, ReservationStatusUpdateRequest } from "@/app/api/routes";
 import { formatDate, formatPrice, formatPickupTime, separateDateAndTime } from "@/lib/utils"; // 유틸리티 함수 임포트
 
 // 예약 상태 타입 (API 정의에 맞춤)
@@ -107,7 +108,7 @@ export default function OwnerReservationsPage() {
 
     try {
       // API 클라이언트를 사용하여 점주 예약 목록 요청
-      const reservationData = await apiClient.reservation.getStoreOwnerReservations();
+      const reservationData = await fetchStoreOwnerReservations();
       // API 응답 데이터를 UI에 맞는 형식으로 변환
       const transformedData = transformApiResponseToReservation(reservationData);
       setReservations(transformedData);
@@ -164,10 +165,7 @@ export default function OwnerReservationsPage() {
     
     try {
       // API 클라이언트를 사용하여 예약 상태 업데이트
-      await apiClient.reservation.updateStatus(
-        parseInt(selectedReservation), 
-        { status: newStatus }
-      );
+      await updateReservationStatus(id, { status: newStatus });
       
       // 상태 업데이트
       setReservations(prev => 
@@ -417,4 +415,50 @@ export default function OwnerReservationsPage() {
       </Dialog>
     </div>
   );
-} 
+}
+
+// apiClient.reservation.getStoreOwnerReservations() 대체
+const fetchStoreOwnerReservations = async () => {
+  try {
+    const response = await fetch(formatInternalApiUrl(RESERVATION_ROUTES.STORE_OWNER), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`예약 목록 가져오기 실패: ${response.status}`);
+    }
+    
+    return await response.json() as StoreOwnerReservation[];
+  } catch (error) {
+    console.error('예약 목록 가져오기 오류:', error);
+    return [];
+  }
+};
+
+// apiClient.reservation.updateStatus() 대체
+const updateReservationStatus = async (reservationId: number, data: ReservationStatusUpdateRequest) => {
+  try {
+    const response = await fetch(formatInternalApiUrl(RESERVATION_ROUTES.UPDATE_STATUS(reservationId)), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`예약 상태 업데이트 실패: ${response.status}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('예약 상태 업데이트 오류:', error);
+    return false;
+  }
+}; 

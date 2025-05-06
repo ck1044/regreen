@@ -26,7 +26,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { InventoryCard } from '@/components/custom/inventory-card';
-import apiClient from '@/lib/api';
+import { formatInternalApiUrl, INVENTORY_ROUTES } from '@/app/api/routes';
 
 // 상품 상태 타입
 type ProductStatus = 'in-stock' | 'low-stock' | 'out-of-stock';
@@ -42,6 +42,16 @@ interface Product {
   quantity: number;
   expiresAt?: string;
   status?: ProductStatus;
+}
+
+// API 응답 타입
+interface InventoryItem {
+  id: number;
+  name: string;
+  imageUrl?: string;
+  price: number;
+  quantity: number;
+  endTime?: string;
 }
 
 export default function InventoryPage() {
@@ -61,7 +71,21 @@ export default function InventoryPage() {
       setError(null);
       
       try {
-        const inventoryData = await apiClient.inventory.getAll();
+        // 직접 API 호출로 재고 목록 요청
+        const response = await fetch(formatInternalApiUrl(INVENTORY_ROUTES.BASE), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+          cache: 'no-store'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`재고 목록 가져오기 실패: ${response.status}`);
+        }
+        
+        const inventoryData = await response.json() as InventoryItem[];
         
         // API 응답 데이터를 컴포넌트에서 사용하는 형식으로 변환
         const transformedProducts = inventoryData.map(item => ({

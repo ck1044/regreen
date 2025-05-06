@@ -7,7 +7,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Store, Plus, Loader2 } from 'lucide-react'
 import { useSession } from "next-auth/react";
-import apiClient from "@/lib/api"; // API 클라이언트 임포트
+// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
+import { formatInternalApiUrl } from "@/app/api/routes"; // API 클라이언트 임포트
 
 export default function StoresPage() {
   const router = useRouter();

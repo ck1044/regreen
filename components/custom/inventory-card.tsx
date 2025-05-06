@@ -8,8 +8,7 @@ type InventoryCardProps = {
   id: string;
   name: string;
   image: string;
-  shopName: string;
-  shopId: string;
+  
   price: number;
   quantity: number;
   expiresAt?: string;
@@ -20,8 +19,7 @@ const InventoryCard = ({
   id,
   name,
   image,
-  shopName,
-  shopId,
+  
   price,
   quantity,
   expiresAt,
@@ -55,13 +53,7 @@ const InventoryCard = ({
           />
         </div>
         <div className="p-3 flex-1">
-          <h3 className="font-medium text-[#0f172a] text-sm line-clamp-1 mb-1">{name}</h3>
-          <Link href={`/shops/${shopId}`} className="inline-block">
-            <div className="flex items-center text-xs text-[#64748b]">
-              <Store size={12} className="mr-1" />
-              <span className="line-clamp-1">{shopName}</span>
-            </div>
-          </Link>          
+          <h3 className="font-medium text-[#0f172a] text-sm line-clamp-1 mb-1">{name}</h3>         
           <div className="flex justify-between items-end mt-2">
             <div>
               <p className="text-sm text-[#0f172a] font-medium">

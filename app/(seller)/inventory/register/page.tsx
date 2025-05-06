@@ -13,7 +13,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Calendar, ImageIcon, Save, UploadCloud } from "lucide-react";
 import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import apiClient from "@/lib/api";
+// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
+import { formatInternalApiUrl, INVENTORY_ROUTES, InventoryCreateRequest } from "@/app/api/routes";
 
 
 // 재고 등록 폼 유효성 검사 스키마
@@ -33,6 +34,40 @@ const priceOptions = [
   "10900", "11900", "12900", "13900", "14900", "15900", 
   "16900", "17900", "18900", "19900"
 ];
+
+// apiClient.inventory.create() 대체
+const createInventory = async (data: InventoryCreateRequest, image?: File | null) => {
+  try {
+    const formData = new FormData();
+    
+    // JSON 데이터를 FormData에 추가
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value || ''));
+    });
+    
+    // 이미지가 있으면 추가
+    if (image) {
+      formData.append('file', image);
+    }
+    
+    const response = await fetch(formatInternalApiUrl(INVENTORY_ROUTES.BASE), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`재고 생성 실패: ${response.status}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('재고 생성 오류:', error);
+    throw error;
+  }
+};
 
 export default function InventoryRegisterPage() {
   const router = useRouter();
@@ -71,13 +106,13 @@ export default function InventoryRegisterPage() {
       
       // apiClient를 사용하여 재고 생성 요청
       try {
-        await apiClient.inventory.create({
+        await createInventory({
           name: values.name,
           description: values.description,
-          price: Number(values.price),
-          quantity: values.quantity,
+          price: parseFloat(values.price),
+          quantity: parseInt(values.quantity),
           availableTime: new Date().toISOString() // 예시: 현재 시간 사용 (실제로는 적절한 시간 포맷 사용)
-        }, selectedFile || undefined);
+        }, selectedFile);
         
         // 성공 시 재고 관리 페이지로 이동
         router.push('/inventory');

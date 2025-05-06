@@ -28,7 +28,6 @@ export interface ProfileFormProps {
     name: string;
     email: string;
     phone: string;
-    role: string;
     university: string;
   };
   onSubmit: (data: ProfileFormValues) => void;

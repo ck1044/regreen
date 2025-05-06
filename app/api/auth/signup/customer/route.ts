@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { CustomerSignupRequest } from '@/auth/signup';
-import { AUTH_ROUTES, formatExternalApiUrl } from '@/app/api/routes';
+import { CustomerSignupRequest, AUTH_ROUTES, formatExternalApiUrl } from '@/app/api/routes';
 
 /**
  * 일반 고객 회원가입 API 핸들러

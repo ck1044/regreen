@@ -1,6 +1,7 @@
 import React from "react";
 import { ShopCard } from "@/components/custom/shop-card";
-import apiClient from "@/lib/api"; // API 클라이언트 임포트
+// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
+import { formatInternalApiUrl, STORE_ROUTES } from "@/app/api/routes";
 
 // 가게 정보 인터페이스 정의
 interface ShopData {
@@ -30,8 +31,21 @@ interface ApiStore {
 // 가게 목록을 가져오는 비동기 함수
 async function getShops(): Promise<ShopData[]> {
   try {
-    // API로 가게 목록 요청
-    const shops = await apiClient.store.getAll();
+    // 직접 API 호출로 가게 목록 요청
+    const response = await fetch(formatInternalApiUrl(STORE_ROUTES.BASE), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      console.error(`가게 목록 가져오기 실패: ${response.status}`);
+      return [];
+    }
+    
+    const shops = await response.json();
     
     // API 응답을 ShopData 형식으로 변환
     return shops.map((shop: ApiStore) => ({

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { StoreOwnerSignupRequest } from '@/auth/signup';
-import { AUTH_ROUTES, formatExternalApiUrl } from '@/app/api/routes';
+import { StoreOwnerSignupRequest, AUTH_ROUTES, formatExternalApiUrl } from '@/app/api/routes';
 
 /**
  * 사장님 회원가입 API 핸들러

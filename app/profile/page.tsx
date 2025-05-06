@@ -22,22 +22,77 @@ import ProfileForm from '@/components/profile/profile-form';
 import PasswordForm from '@/components/profile/password-form';
 import NotificationSettings from '@/components/profile/notification-settings';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import apiClient from '@/lib/api'; // API 클라이언트 임포트
-
-// API의 기본 UserProfile 인터페이스
-interface UserProfile {
-  role: 'CUSTOMER' | 'STORE_OWNER' | 'ADMIN';
-  email: string;
-  name: string;
-  phoneNumber: string;
-  university: string;
-}
+import { formatInternalApiUrl, USER_ROUTES, UserProfile, UpdateProfileRequest } from "@/app/api/routes";
 
 // 확장된 UserProfile 인터페이스 (UI에 필요한 추가 속성 포함)
 interface ExtendedUserProfile extends UserProfile {
   id?: string;
   createdAt?: string;
 }
+
+// API 호출 함수
+const fetchUserProfile = async (): Promise<UserProfile | null> => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return null;
+    
+    const response = await fetch(formatInternalApiUrl(USER_ROUTES.PROFILE), {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`프로필 조회 실패: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data as UserProfile;
+  } catch (error) {
+    console.error('프로필 조회 오류:', error);
+    return null;
+  }
+};
+
+// 프로필 업데이트 함수
+const updateUserProfile = async (data: UpdateProfileRequest): Promise<UserProfile | null> => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return null;
+    
+    const response = await fetch(formatInternalApiUrl(USER_ROUTES.UPDATE_PROFILE), {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`프로필 업데이트 실패: ${response.status}`);
+    }
+
+    const updatedProfile = await response.json();
+    
+    // 로컬 스토리지 업데이트
+    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    
+    return updatedProfile as UserProfile;
+  } catch (error) {
+    console.error('프로필 업데이트 오류:', error);
+    return null;
+  }
+};
+
+// 로그아웃 처리 함수
+const signOut = () => {
+  // 토큰과 사용자 프로필 제거
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('userProfile');
+};
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -61,16 +116,17 @@ export default function ProfilePage() {
   const fetchUserData = async () => {
     setIsLoading(true);
     try {
-      // API 클라이언트를 사용하여 사용자 프로필 요청
-      const profileData = await apiClient.user.getProfile();
+      // 사용자 프로필 요청
+      const profileData = await fetchUserProfile();
       
-      // API 응답을 확장 인터페이스에 매핑
-      setUserData({
-        ...profileData, // 기본 속성 복사(role, email, name, phoneNumber)
-        id: '', // 확장 속성은 빈 값으로 설정
-        createdAt: '',
-        university: ''
-      });
+      if (profileData) {
+        // API 응답을 확장 인터페이스에 매핑
+        setUserData({
+          ...profileData, // 기본 속성 복사(role, email, name, phoneNumber)
+          id: '', // 확장 속성은 빈 값으로 설정
+          createdAt: ''
+        });
+      }
     } catch (error) {
       console.error('사용자 데이터 불러오기 오류:', error);
     } finally {
@@ -80,8 +136,8 @@ export default function ProfilePage() {
 
   // 로그아웃 처리
   const handleLogout = () => {
-    // API 클라이언트를 사용하여 로그아웃
-    apiClient.auth.signout();
+    // 로그아웃 처리
+    signOut();
     router.push('/auth/signin');
   };
 
@@ -108,22 +164,23 @@ export default function ProfilePage() {
   ];
 
   // 프로필 업데이트 핸들러
-  const handleProfileUpdate = async (updatedProfile: UserProfile) => {
+  const handleProfileUpdate = async (formData: { name: string; email: string; phone: string; university: string }) => {
     setIsLoading(true);
     try {
-      // API 클라이언트를 사용하여 프로필 업데이트
-      // 기존 API 인터페이스와 ProfileForm 인터페이스 사이의 필드명 차이(phone vs phoneNumber) 처리
-      await apiClient.user.updateProfile({
-        name: updatedProfile.name,
-        university: updatedProfile.university,
-        phoneNumber: updatedProfile.phoneNumber
+      // 프로필 업데이트 API 호출
+      // ProfileForm 인터페이스와 API 인터페이스 사이의 필드명 차이(phone vs phoneNumber) 처리
+      await updateUserProfile({
+        name: formData.name,
+        university: formData.university,
+        phoneNumber: formData.phone
       });
       
       // UI 업데이트
       setUserData({
         ...userData,
-        name: updatedProfile.name,
-        phoneNumber: updatedProfile.phoneNumber
+        name: formData.name,
+        phoneNumber: formData.phone,
+        university: formData.university
       });
 
       console.log('프로필이 성공적으로 업데이트되었습니다.');
@@ -162,16 +219,9 @@ export default function ProfilePage() {
                   name: userData.name,
                   email: userData.email,
                   phone: userData.phoneNumber, // phoneNumber를 phone으로 전달
-                  role: userData.role,
                   university: userData.university
                 }}
-                onSubmit={(data) => handleProfileUpdate({
-                  name: data.name,
-                  email: data.email,
-                  phoneNumber: data.phone, // phone을 phoneNumber로 변환
-                  role: userData.role,
-                  university: data.university
-                })}
+                onSubmit={handleProfileUpdate}
               />
             </CardContent>
           </Card>

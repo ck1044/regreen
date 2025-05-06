@@ -25,7 +25,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import apiClient from "@/lib/api"; // API 클라이언트 임포트
+// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
+import { formatInternalApiUrl } from "@/app/api/routes"; // API 클라이언트 임포트
 import { toast } from "sonner";
 
 // 사장님 회원가입 유효성 검사 스키마

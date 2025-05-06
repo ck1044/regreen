@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LockIcon, MailIcon, Loader2 } from "lucide-react";
-import apiClient from "@/lib/api"; // API 클라이언트 임포트
+import { formatInternalApiUrl, AUTH_ROUTES, SigninRequest, UserProfile } from "@/app/api/routes";
 
 // 로그인 유효성 검사 스키마
 const signInSchema = z.object({
@@ -37,20 +37,29 @@ export default function SignInForm() {
   });
 
   // 사용자 프로필 정보 가져오기
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (token: string): Promise<UserProfile | null> => {
     try {
-      const userProfile = await apiClient.user.getProfile();
+      const response = await fetch(formatInternalApiUrl('/user/profile'), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-      // 관리자인 경우 admin 페이지로 리다이렉트
-      if (apiClient.isAdmin()) {
-        router.push('/admin');
-        return true;
+      if (!response.ok) {
+        return null;
       }
       
-      return false;
+      const userProfile = await response.json();
+      
+      // 로컬 스토리지에 프로필 저장
+      localStorage.setItem('userProfile', JSON.stringify(userProfile));
+      
+      return userProfile as UserProfile;
     } catch (error) {
       console.error('사용자 프로필 가져오기 오류:', error);
-      return false;
+      return null;
     }
   };
 
@@ -59,56 +68,71 @@ export default function SignInForm() {
     setError(null);
 
     try {
-      // API 클라이언트를 사용한 로그인 시도
-      try {
-        const authResponse = await apiClient.auth.signin(data);
-        // API 직접 로그인 성공
-        
-        // 로컬 스토리지에 토큰 저장
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', authResponse.accessToken);
-        }
-        
-        // NextAuth를 통한 세션 설정도 함께 진행 (선택적)
-        await signIn("credentials", {
-          email: data.email,
-          password: data.password,
-          redirect: false,
-        });
-        
-        // 사용자 프로필 정보 가져오기
-        const isAdmin = await fetchUserProfile();
-        
-        // 로그인 성공 후 리다이렉트 (관리자가 아닌 경우에만)
-        if (!isAdmin) {
-          router.refresh();
-          router.push("/");
-        }
-        
-        return;
-      } catch (apiError) {
-        console.error("API 로그인 오류:", apiError);
-        // API 로그인이 실패한 경우 NextAuth로 시도
+      // API 직접 호출
+      const loginUrl = formatInternalApiUrl(AUTH_ROUTES.SIGNIN);
+      
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '로그인 중 오류가 발생했습니다');
       }
-
-      // NextAuth를 통한 로그인 (API 실패시 백업)
-      const result = await signIn("credentials", {
+      
+      const authResponse = await response.json();
+      
+      // 로컬 스토리지에 토큰 저장
+      if (typeof window !== 'undefined' && authResponse.accessToken) {
+        localStorage.setItem('accessToken', authResponse.accessToken);
+      }
+      
+      // NextAuth를 통한 세션 설정도 함께 진행 (선택적)
+      await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
       });
-
-      if (result?.error) {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다");
-        return;
+      
+      // 사용자 프로필 정보 가져오기
+      const userProfile = await fetchUserProfile(authResponse.accessToken);
+      
+      // 로그인 성공 후 리다이렉트 (관리자인 경우 관리자 페이지로)
+      if (userProfile?.role === 'ADMIN') {
+        router.push("/admin");
+      } else {
+        router.refresh();
+        router.push("/");
       }
-
-      // 로그인 성공 시 리디렉션
-      router.refresh();
-      router.push("/main");
+      
     } catch (error) {
-      setError("로그인 중 오류가 발생했습니다");
+      setError(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다");
       console.error(error);
+
+      // NextAuth를 통한 로그인 재시도 (API 실패시 백업)
+      try {
+        const result = await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          setError("이메일 또는 비밀번호가 올바르지 않습니다");
+          return;
+        }
+
+        // 로그인 성공 시 리디렉션
+        router.refresh();
+        router.push("/main");
+      } catch (nextAuthError) {
+        setError("로그인 중 오류가 발생했습니다");
+        console.error(nextAuthError);
+      }
     } finally {
       setIsLoading(false);
     }

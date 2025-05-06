@@ -27,7 +27,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import apiClient from "@/lib/api"; // API 클라이언트 임포트
+// API 클라이언트 제거됨: 필요한 API 타입 및 경로만 임포트
+import { formatInternalApiUrl, RESERVATION_ROUTES, CustomerReservation } from "@/app/api/routes";
 import { formatDate, formatPrice, formatPickupTime, separateDateAndTime } from "@/lib/utils"; // 유틸리티 함수 임포트
 
 // 예약 상태 타입 (API 정의에 맞춤)
@@ -55,6 +56,52 @@ const statusBadgeConfig = {
   'CANCELLED': { color: 'bg-red-100 text-red-800', text: '예약 취소' },
 };
 
+// apiClient.reservation.getCustomerReservations() 대체
+const fetchCustomerReservations = async () => {
+  try {
+    const response = await fetch(formatInternalApiUrl(RESERVATION_ROUTES.CUSTOMER), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`예약 목록 가져오기 실패: ${response.status}`);
+    }
+    
+    return await response.json() as CustomerReservation[];
+  } catch (error) {
+    console.error('예약 목록 가져오기 오류:', error);
+    return [];
+  }
+};
+
+// 예약 상태 업데이트 함수 추가
+const updateReservationStatus = async (reservationId: number, status: string) => {
+  try {
+    const response = await fetch(formatInternalApiUrl(RESERVATION_ROUTES.UPDATE_STATUS(reservationId)), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      body: JSON.stringify({ status }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`예약 상태 업데이트 실패: ${response.status}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('예약 상태 업데이트 오류:', error);
+    return false;
+  }
+};
+
 export default function MyReservationsPage() {
   // 상태 관리
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -72,7 +119,7 @@ export default function MyReservationsPage() {
 
     try {
       // API 클라이언트를 사용하여 고객 예약 목록 요청
-      const reservationData = await apiClient.reservation.getCustomerReservations();
+      const reservationData = await fetchCustomerReservations();
       setReservations(reservationData);
     } catch (err) {
       console.error('예약 목록 가져오기 오류:', err);
@@ -114,10 +161,7 @@ export default function MyReservationsPage() {
     
     try {
       // API 클라이언트를 사용하여 예약 취소 요청
-      await apiClient.reservation.updateStatus(
-        parseInt(reservationToCancel), 
-        { status: 'CANCELLED' }
-      );
+      await updateReservationStatus(parseInt(reservationToCancel), 'CANCELLED');
       
       // 상태 업데이트
       setReservations(prev => 
