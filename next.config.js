@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['images.unsplash.com', 'via.placeholder.com', 'img.freepik.com', 'images.remotePatterns'],
+    domains: ['images.unsplash.com', 'via.placeholder.com', 'img.freepik.com', 'images.remotePatterns', 'regreen-bucket.s3.ap-northeast-2.amazonaws.com'],
   },
   eslint: {
     ignoreDuringBuilds: true,

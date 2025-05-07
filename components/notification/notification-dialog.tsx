@@ -64,25 +64,25 @@ export default function NotificationDialog({
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const { notifications, unreadCount, markAsRead, markAllAsRead, sendTestNotification } = useNotifications();
 
-  // 탭별 필터링된 알림 목록
-  const filteredNotifications = notifications.filter((notification) => {
-    if (selectedTab === "all") return true;
+  // // 탭별 필터링된 알림 목록
+  // const filteredNotifications = notifications.filter((notification) => {
+  //   if (selectedTab === "all") return true;
     
-    if (selectedTab === "unread") {
-      return !notification.isRead;
-    }
+  //   if (selectedTab === "unread") {
+  //     return !notification.isRead;
+  //   }
     
-    // 기타 탭은 알림 타입에 따라 필터링
-    if (selectedTab === "reservation") {
-      return notification.type.includes("RESERVATION");
-    }
+  //   // 기타 탭은 알림 타입에 따라 필터링
+  //   if (selectedTab === "reservation") {
+  //     return notification.type.includes("RESERVATION");
+  //   }
     
-    if (selectedTab === "inventory") {
-      return notification.type.includes("INVENTORY");
-    }
+  //   if (selectedTab === "inventory") {
+  //     return notification.type.includes("INVENTORY");
+  //   }
     
-    return notification.type === selectedTab;
-  });
+  //   return notification.type === selectedTab;
+  // });
 
   // 알림 클릭 처리
   const handleNotificationClick = (notificationId: string) => {
@@ -124,7 +124,7 @@ export default function NotificationDialog({
           </DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
+        {/* <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="all">
               전체
@@ -137,16 +137,16 @@ export default function NotificationDialog({
             <TabsTrigger value="reservation">예약</TabsTrigger>
             <TabsTrigger value="inventory">재고</TabsTrigger>
             <TabsTrigger value="unread">읽지않음</TabsTrigger>
-          </TabsList>
+          </TabsList> */}
           
-          <TabsContent value={selectedTab} className="mt-0">
-            {filteredNotifications.length === 0 ? (
+          <div className="mt-0">
+            {notifications.length === 0 ? (
               <div className="py-8 text-center text-gray-500">
                 알림이 없습니다
               </div>
             ) : (
               <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-                {filteredNotifications.map((notification) => (
+                {notifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
@@ -178,16 +178,16 @@ export default function NotificationDialog({
                 ))}
               </div>
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        {/* </Tabs> */}
         
-        {process.env.NODE_ENV === 'development' && (
+        {/* {process.env.NODE_ENV === 'development' && ( */}
           <div className="pt-4 flex justify-end">
             <Button variant="outline" size="sm" onClick={handleSendTestNotification}>
               테스트 알림 보내기
             </Button>
           </div>
-        )}
+        {/* )} */}
       </DialogContent>
     </Dialog>
   );

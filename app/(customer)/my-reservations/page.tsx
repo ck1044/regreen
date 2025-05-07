@@ -284,7 +284,7 @@ export default function MyReservationsPage() {
               return (
                 <Card key={reservation.id} className="overflow-hidden">
                   <CardContent className="p-0">
-                    <Link href={`/my-reservations/${reservation.id}`}>
+                    
                       <div className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <Badge className={statusBadgeConfig[reservation.status].color}>
@@ -314,7 +314,7 @@ export default function MyReservationsPage() {
                               {formatPrice(reservation.inventoryPrice * reservation.amount)}원 ({reservation.amount}개)
                             </p>
                           </div>
-                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                          
                         </div>
                         
                         <div className="border-t pt-3 text-sm grid grid-cols-2 gap-2">
@@ -332,7 +332,6 @@ export default function MyReservationsPage() {
                           </div>
                         </div>
                       </div>
-                    </Link>
                     
                     {/* 예약 상태 표시 */}
                     <div className="px-4 py-3 bg-gray-50 border-t ">

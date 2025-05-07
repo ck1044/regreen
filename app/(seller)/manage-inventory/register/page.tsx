@@ -23,7 +23,7 @@ const inventoryFormSchema = z.object({
   description: z.string().min(10, { message: "설명은 최소 10자 이상이어야 합니다" }),
   price: z.string().min(1, { message: "가격을 선택해주세요" }),
   quantity: z.coerce.number().int().min(0, { message: "수량은 0 이상이어야 합니다" }),
-  // 이미지는 프론트엔드에서만 관리하고 API 호출 시 FormData로 전송할 예정
+  availableTime: z.string().min(1, { message: "판매 가능 시간을 입력해주세요" }),
 });
 
 type InventoryFormValues = z.infer<typeof inventoryFormSchema>;
@@ -40,10 +40,12 @@ const createInventory = async (data: InventoryCreateRequest, image?: File | null
   try {
     const formData = new FormData();
     
-    // JSON 데이터를 FormData에 추가
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value || ''));
-    });
+    // API 명세에 맞게 데이터 추가
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    formData.append('price', data.price.toString());
+    formData.append('quantity', data.quantity.toString());
+    formData.append('availableTime', data.availableTime);
     
     // 이미지가 있으면 추가
     if (image) {
@@ -64,7 +66,8 @@ const createInventory = async (data: InventoryCreateRequest, image?: File | null
     });
     
     if (!response.ok) {
-      throw new Error(`재고 생성 실패: ${response.status}`);
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `재고 생성 실패: ${response.status}`);
     }
     
     return true;
@@ -88,6 +91,7 @@ export default function InventoryRegisterPage() {
       description: "",
       price: "",
       quantity: 0,
+      availableTime: "",
     },
   });
 
@@ -119,21 +123,21 @@ export default function InventoryRegisterPage() {
         return;
       }
       
-      // apiClient를 사용하여 재고 생성 요청
+      // API 명세에 맞게 데이터 전송
       try {
         await createInventory({
           name: values.name,
           description: values.description,
           price: parseFloat(values.price),
           quantity: values.quantity,
-          availableTime: new Date().toISOString() // 예시: 현재 시간 사용 (실제로는 적절한 시간 포맷 사용)
+          availableTime: values.availableTime
         }, selectedFile, accessToken);
         
-        // 성공 시 재고 관리 페이지로 이동
+        alert("재고가 성공적으로 등록되었습니다.");
         router.push('/manage-inventory');
       } catch (error) {
         console.error("API 요청 중 오류 발생:", error);
-        alert("재고 등록에 실패했습니다. 다시 시도해 주세요.");
+        alert(error instanceof Error ? error.message : "재고 등록에 실패했습니다. 다시 시도해 주세요.");
       }
     } catch (error) {
       console.error("재고 등록 중 오류 발생:", error);
@@ -261,10 +265,26 @@ export default function InventoryRegisterPage() {
                       </FormItem>
                     )}
                   />
-              <Button type="submit" className="w-full mt-4 bg-[#5DCA69] hover:bg-[#4db058]">
-                <Save className="h-4 w-4 mr-2" />
-                제품 등록하기
-              </Button>
+
+                  {/* 판매 가능 시간 */}
+                  <FormField
+                    control={form.control}
+                    name="availableTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>판매 가능 시간</FormLabel>
+                        <FormControl>
+                          <Input type="datetime-local" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" className="w-full mt-4 bg-[#5DCA69] hover:bg-[#4db058]">
+                    <Save className="h-4 w-4 mr-2" />
+                    제품 등록하기
+                  </Button>
                 </div>
               </CardContent>
             </Card>

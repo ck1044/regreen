@@ -80,9 +80,8 @@ const updateUserProfile = async (data: UpdateProfileRequest, accessToken?: strin
 export default function CustomerProfilePage() {
   const router = useRouter();
   const { data: session } = useSession();
-  // @ts-ignore - accessToken 속성이 타입 정의에 없어서 무시
   const accessToken = session?.user?.accessToken;
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<ExtendedUserProfile>({
     name: '',
@@ -213,8 +212,8 @@ export default function CustomerProfilePage() {
       </Tabs>
 
       {/* 메뉴 항목 */}
-      <Card className="mt-6">
-        <CardHeader>
+      {/* <Card className="mt-6"> */}
+        {/* <CardHeader>
           <CardTitle>메뉴</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2">
@@ -234,18 +233,18 @@ export default function CustomerProfilePage() {
               </div>
             </Button>
           ))}
-        </CardContent>
-        <CardFooter className="pt-0 pb-3">
+        </CardContent> */}
+        {/* <CardFooter className="pt-0 pb-3"> */}
           <Button 
             variant="outline" 
-            className="w-full text-destructive border-destructive hover:bg-destructive/10"
+            className="w-full mt-4 text-destructive border-destructive hover:bg-destructive/10"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-2" />
             로그아웃
           </Button>
-        </CardFooter>
-      </Card>
+        {/* </CardFooter> */}
+      {/* </Card> */}
     </div>
   );
 } 

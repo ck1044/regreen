@@ -25,7 +25,7 @@ import {
   Filter,
   Loader2
 } from 'lucide-react';
-import { InventoryCard } from '@/components/custom/inventory-card';
+import { OwnerInventoryCard } from '@/components/custom/owner-inventory-card';
 import { formatInternalApiUrl, INVENTORY_ROUTES } from '@/app/api/routes';
 import { useSession } from "next-auth/react";
 
@@ -37,8 +37,6 @@ interface Product {
   id: string;
   name: string;
   image: string;
-  shopName: string;
-  shopId: string;
   price: number;
   quantity: number;
   expiresAt?: string;
@@ -48,12 +46,18 @@ interface Product {
 
 // API 응답 타입
 interface InventoryItem {
-  id: number;
-  name: string;
-  imageUrl?: string;
-  price: number;
-  quantity: number;
-  endTime?: string;
+  inventory: {
+    id: number;
+    name: string;
+    price: number;
+    imageUrl: string;
+    quantity: number;
+    startTime: string;
+    endTime: string;
+  };
+  store: {
+    category: string;
+  };
 }
 
 export default function InventoryPage() {
@@ -64,10 +68,6 @@ export default function InventoryPage() {
   
   // 상태 관리
   const [products, setProducts] = useState<Product[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -80,12 +80,10 @@ export default function InventoryPage() {
       setError(null);
       
       try {
-        // 직접 API 호출로 재고 목록 요청
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
         };
         
-        // 토큰이 있는 경우 Authorization 헤더 추가
         if (accessToken) {
           headers['Authorization'] = `Bearer ${accessToken}`;
         }
@@ -95,8 +93,6 @@ export default function InventoryPage() {
           headers,
           cache: 'no-store'
         });
-        console.log(response);
-        
         
         if (!response.ok) {
           throw new Error(`재고 목록 가져오기 실패: ${response.status}`);
@@ -106,15 +102,13 @@ export default function InventoryPage() {
         
         // API 응답 데이터를 컴포넌트에서 사용하는 형식으로 변환
         const transformedProducts = inventoryData.map(item => ({
-          id: item.id ? item.id.toString() : '0',
-          name: item.name || '',
-          image: item.imageUrl || '/placeholder-food.jpg',
-          shopName: '내 가게', // API에서 이 정보를 제공하지 않는 경우 기본값 사용
-          shopId: '1', // API에서 이 정보를 제공하지 않는 경우 기본값 사용
-          price: item.price,
-          quantity: item.quantity,
-          expiresAt: item.endTime ? new Date(item.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '마감 정보 없음',
-          category: '기타' // 기본 카테고리 값 추가
+          id: item.inventory.id.toString(),
+          name: item.inventory.name,
+          image: item.inventory.imageUrl || '/placeholder-food.jpg',
+          price: item.inventory.price,
+          quantity: item.inventory.quantity,
+          expiresAt: item.inventory.endTime ? new Date(item.inventory.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '마감 정보 없음',
+          category: item.store.category
         }));
         
         setProducts(transformedProducts);
@@ -129,34 +123,6 @@ export default function InventoryPage() {
     
     fetchInventory();
   }, [session, accessToken]);
-  
-  // // 상품 검색 처리
-  // const filteredProducts = products.filter(product => {
-  //   // 검색어 필터링
-  //   const matchesSearch = searchQuery === '' || 
-  //                        (product.name && product.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
-  //                        (product.shopName && product.shopName.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-  //   // 상태 필터링
-  //   const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
-    
-  //   return matchesSearch && matchesStatus;
-  // });
-  
-  // // 상품 삭제 처리
-  // const handleDeleteProduct = (productId: string) => {
-  //   setProductToDelete(productId);
-  //   setDeleteDialogOpen(true);
-  // };
-  
-  // // 상품 삭제 확인
-  // const confirmDelete = () => {
-  //   if (productToDelete) {
-  //     // 실제 삭제 구현 필요
-  //     setDeleteDialogOpen(false);
-  //     setProductToDelete(null);
-  //   }
-  // };
 
   // 로딩 중 UI
   if (isLoading) {
@@ -183,38 +149,6 @@ export default function InventoryPage() {
           </Link>
         </div>
         
-        {/* 검색 및 필터링 */}
-        {/* <div className="mb-6 space-y-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input 
-                placeholder="상품명 검색" 
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="flex gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="상태 필터" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">모든 상태</SelectItem>
-                <SelectItem value="in-stock">판매 중</SelectItem>
-                <SelectItem value="low-stock">품절 임박</SelectItem>
-                <SelectItem value="out-of-stock">품절</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-         */}
         {/* 에러 메시지 */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4">
@@ -227,9 +161,9 @@ export default function InventoryPage() {
           {products.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg text-center">
               <p className="text-gray-500 mb-4">
-                검색 결과가 없습니다.
+                등록된 상품이 없습니다.
               </p>
-              <Link href="/inventory/register">
+              <Link href="/manage-inventory/register">
                 <Button className="bg-[#5DCA69] hover:bg-[#4db058]">
                   새 제품 등록하기
                 </Button>
@@ -238,13 +172,11 @@ export default function InventoryPage() {
           ) : (
             <div>
               {products.map(product => (
-                <InventoryCard
+                <OwnerInventoryCard
                   key={product.id}
                   id={product.id}
                   name={product.name}
                   image={product.image}
-                  shopName={product.shopName}
-                  shopId={product.shopId}
                   price={product.price}
                   quantity={product.quantity}
                   expiresAt={product.expiresAt}

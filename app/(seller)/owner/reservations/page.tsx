@@ -38,12 +38,16 @@ type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 // API에서 반환되는 예약 정보 타입
 interface StoreOwnerReservation {
   id: number;
-  userName: string;
+  inventoryImage: string;
+  inventoryName: string;
+  inventoryPrice: number;
+  storeName: string;
+  storeAddress: string;
+  storeCategory: string;
   amount: number;
   pickUpTime: string;
   status: ReservationStatus;
   createdAt: string;
-  // API 응답에 맞게 추가 필드가 있다면 여기에 추가
 }
 
 // 컴포넌트에서 사용하는 예약 정보 타입
@@ -89,11 +93,11 @@ export default function OwnerReservationsPage() {
   const transformApiResponseToReservation = (data: StoreOwnerReservation[]): Reservation[] => {
     return data.map(item => ({
       id: item.id,
-      inventoryImage: "/placeholder-food.jpg", // 기본 이미지 사용 또는 API에서 제공하는 경우 해당 값 사용
-      inventoryName: "상품명", // API에서 제공하지 않는 경우 기본값 사용
-      inventoryPrice: 0, // API에서 제공하지 않는 경우 기본값 사용
-      customerName: item.userName,
-      customerPhone: "010-0000-0000", // API에서 제공하지 않는 경우 기본값 사용
+      inventoryImage: item.inventoryImage,
+      inventoryName: item.inventoryName,
+      inventoryPrice: item.inventoryPrice,
+      customerName: item.storeName,
+      customerPhone: item.storeAddress, // 주소를 임시로 전화번호로 사용
       amount: item.amount,
       pickUpTime: item.pickUpTime,
       status: item.status,
@@ -122,23 +126,23 @@ export default function OwnerReservationsPage() {
     }
   };
 
-  // 예약 필터링
-  const filteredReservations = reservations.filter(reservation => {
-    // 검색어 필터링
-    const matchesSearch = 
-      reservation.inventoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      reservation.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+  // // 예약 필터링
+  // const filteredReservations = reservations.filter(reservation => {
+  //   // 검색어 필터링
+  //   const matchesSearch = 
+  //     reservation.inventoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     reservation.customerName.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // 탭 필터링
-    const matchesTab = 
-      selectedTab === "all" || 
-      (selectedTab === "pending" && reservation.status === "PENDING") ||
-      (selectedTab === "confirmed" && reservation.status === "CONFIRMED") ||
-      (selectedTab === "completed" && reservation.status === "COMPLETED") ||
-      (selectedTab === "cancelled" && reservation.status === "CANCELLED");
+  //   // 탭 필터링
+  //   const matchesTab = 
+  //     selectedTab === "all" || 
+  //     (selectedTab === "pending" && reservation.status === "PENDING") ||
+  //     (selectedTab === "confirmed" && reservation.status === "CONFIRMED") ||
+  //     (selectedTab === "completed" && reservation.status === "COMPLETED") ||
+  //     (selectedTab === "cancelled" && reservation.status === "CANCELLED");
     
-    return matchesSearch && matchesTab;
-  });
+  //   return matchesSearch && matchesTab;
+  // });
 
   // 예약 상태 변경 처리
   const handleUpdateReservationStatus = async () => {
@@ -274,14 +278,14 @@ export default function OwnerReservationsPage() {
         
         {/* 예약 목록 */}
         <div className="space-y-4">
-          {filteredReservations.length === 0 ? (
+          {reservations.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg text-center">
               <p className="text-gray-500 mb-4">
                 예약 내역이 없습니다.
               </p>
             </div>
           ) : (
-            filteredReservations.map(reservation => {
+            reservations.map(reservation => {
               const { date, time } = separateDateAndTime(reservation.pickUpTime);
               return (
                 <Card key={reservation.id} className="overflow-hidden">
@@ -428,12 +432,16 @@ const fetchStoreOwnerReservations = async () => {
       },
       cache: 'no-store'
     });
+    console.log('API 응답:', response);
+    console.log('api url:', formatInternalApiUrl(RESERVATION_ROUTES.STORE_OWNER));
     
     if (!response.ok) {
       throw new Error(`예약 목록 가져오기 실패: ${response.status}`);
     }
     
-    return await response.json() as StoreOwnerReservation[];
+    const data = await response.json() as StoreOwnerReservation[];
+    console.log('API 응답 데이터:', JSON.stringify(data, null, 2));
+    return data;
   } catch (error) {
     console.error('예약 목록 가져오기 오류:', error);
     return [];

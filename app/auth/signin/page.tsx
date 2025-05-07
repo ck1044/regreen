@@ -37,6 +37,12 @@ export default function SignInPage() {
                   회원가입
                 </Link>
               </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                사장님이신가요?{" "}
+                <Link href="/auth/signin/owner" className="text-primary underline underline-offset-4 hover:text-primary/90">
+                  사장님 로그인
+                </Link>
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     let responseData;
     try {
       responseData = await response.json();
+      console.log('고객 예약 목록 API 응답:', JSON.stringify(responseData, null, 2));
     } catch (parseError) {
       console.error('응답 데이터 파싱 오류:', parseError);
       

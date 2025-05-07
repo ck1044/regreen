@@ -39,12 +39,7 @@ const NavigationBar = ({ userRole }: NavigationBarProps) => {
       icon: <Calendar size={20} />,
       roles: ["customer"],
     },
-    {
-      href: "/notifications",
-      label: "알림",
-      icon: <Bell size={20} />,
-      roles: ["customer"],
-    },
+
     {
       href: "/customer_profile",
       label: "프로필",
