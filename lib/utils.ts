@@ -52,3 +52,14 @@ export const convertTimeToISO = (time: string) => {
   now.setHours(parseInt(hours), parseInt(minutes), 0, 0);
   return now.toISOString();
 };
+
+/**
+ * 숫자를 한국 원화 형식으로 포맷팅
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('ko-KR', {
+    style: 'currency',
+    currency: 'KRW',
+    maximumFractionDigits: 0
+  }).format(amount);
+}

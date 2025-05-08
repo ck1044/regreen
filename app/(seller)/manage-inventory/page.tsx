@@ -63,7 +63,6 @@ interface InventoryItem {
 export default function InventoryPage() {
   // 세션 가져오기
   const { data: session } = useSession();
-  // @ts-ignore - accessToken 속성이 타입 정의에 없어서 무시
   const accessToken = session?.user?.accessToken;
   
   // 상태 관리
