@@ -11,7 +11,8 @@ import {
   LogOut,
   ChevronRight,
   Loader2,
-  ShoppingBag
+  ShoppingBag,
+  Shield
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import PasswordForm from '@/components/profile/password-form';
 import { formatInternalApiUrl, USER_ROUTES, UserProfile, UpdateProfileRequest } from "@/app/api/routes";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
+import { Badge } from "@/components/ui/badge";
 
 // 확장된 UserProfile 인터페이스 (UI에 필요한 추가 속성 포함)
 interface ExtendedUserProfile extends UserProfile {
@@ -88,7 +90,8 @@ export default function CustomerProfilePage() {
     email: '',
     phoneNumber: '',
     role: 'CUSTOMER',
-    university: ''
+    university: '',
+    isAdmin: false
   });
 
   useEffect(() => {
@@ -134,7 +137,7 @@ export default function CustomerProfilePage() {
   ];
 
   // 프로필 업데이트 핸들러
-  const handleProfileUpdate = async (formData: { name: string; email: string; phone: string; university: string }) => {
+  const handleProfileUpdate = async (formData: { name: string; phone: string; university: string }) => {
     setIsLoading(true);
     try {
       // 프로필 업데이트 API 호출
@@ -188,8 +191,7 @@ export default function CustomerProfilePage() {
               <ProfileForm 
                 userProfile={{
                   name: userData.name,
-                  email: userData.email,
-                  phone: userData.phoneNumber || '', // phoneNumber를 phone으로 전달
+                  phone: userData.phoneNumber || '',
                   university: userData.university || ''
                 }}
                 onSubmit={handleProfileUpdate}
@@ -211,40 +213,14 @@ export default function CustomerProfilePage() {
         </TabsContent>
       </Tabs>
 
-      {/* 메뉴 항목 */}
-      {/* <Card className="mt-6"> */}
-        {/* <CardHeader>
-          <CardTitle>메뉴</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2">
-          {menuItems.map((item, index) => (
-            <Button
-              key={index}
-              variant="ghost"
-              className="w-full justify-start p-3 h-auto"
-              onClick={() => router.push(item.path)}
-            >
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <span className="mr-3 text-muted-foreground">{item.icon}</span>
-                  <span>{item.label}</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </Button>
-          ))}
-        </CardContent> */}
-        {/* <CardFooter className="pt-0 pb-3"> */}
-          <Button 
-            variant="outline" 
-            className="w-full mt-4 text-destructive border-destructive hover:bg-destructive/10"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            로그아웃
-          </Button>
-        {/* </CardFooter> */}
-      {/* </Card> */}
+      <Button 
+        variant="outline" 
+        className="w-full mt-4 text-destructive border-destructive hover:bg-destructive/10"
+        onClick={handleLogout}
+      >
+        <LogOut className="h-4 w-4 mr-2" />
+        로그아웃
+      </Button>
     </div>
   );
 } 

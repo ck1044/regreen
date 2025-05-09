@@ -15,10 +15,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { formatInternalApiUrl, USER_ROUTES, UpdatePasswordRequest } from "@/app/api/routes";
+import { useSession } from "next-auth/react";
 
-// 비밀번호 변경 검증 스키마
+// 비밀번호 변경 검증 스키마 - API 명세에 맞게 수정
 const passwordSchema = z.object({
-  currentPassword: z.string().min(1, { message: '현재 비밀번호를 입력하세요' }),
+  password: z.string().min(1, { message: '현재 비밀번호를 입력하세요' }),
   newPassword: z.string().min(8, { message: '비밀번호는 최소 8자 이상이어야 합니다' }),
   confirmPassword: z.string(),
 }).refine(data => data.newPassword === data.confirmPassword, {
@@ -26,34 +29,83 @@ const passwordSchema = z.object({
   path: ['confirmPassword'],
 });
 
+type PasswordFormValues = z.infer<typeof passwordSchema>;
+
+// 비밀번호 업데이트 함수
+const updatePassword = async (data: UpdatePasswordRequest, accessToken?: string): Promise<boolean> => {
+  try {
+    if (!accessToken) return false;
+    
+    const response = await fetch(formatInternalApiUrl(USER_ROUTES.UPDATE_PASSWORD), {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      // 응답 내용 확인
+      const errorText = await response.text();
+      console.error(`비밀번호 변경 실패 (${response.status}):`, errorText);
+      
+      if (response.status === 401) {
+        throw new Error("현재 비밀번호가 올바르지 않습니다");
+      } else {
+        throw new Error(`비밀번호 변경 실패: ${response.status}`);
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('비밀번호 변경 오류:', error);
+    throw error;
+  }
+};
+
 export default function PasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session } = useSession();
+  const accessToken = session?.user?.accessToken;
 
-  const form = useForm<z.infer<typeof passwordSchema>>({
+  const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
-      currentPassword: '',
+      password: '',
       newPassword: '',
       confirmPassword: '',
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof passwordSchema>) => {
+  const onSubmit = async (values: PasswordFormValues) => {
     setIsLoading(true);
     
     try {
-      // 실제 구현에서는 API 호출
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // API 호출을 위한 데이터 구성
+      const passwordData: UpdatePasswordRequest = {
+        password: values.password,
+        newPassword: values.newPassword
+      };
+      
+      // API 호출
+      await updatePassword(passwordData, accessToken);
       
       form.reset({
-        currentPassword: '',
+        password: '',
         newPassword: '',
         confirmPassword: '',
       });
       
       toast.success('비밀번호가 성공적으로 변경되었습니다');
     } catch (error) {
-      toast.error('비밀번호 변경 중 오류가 발생했습니다');
+      let errorMessage = '비밀번호 변경 중 오류가 발생했습니다';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -65,7 +117,7 @@ export default function PasswordForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="currentPassword"
+          name="password"
           render={({ field }) => (
             <FormItem>
               <FormLabel>현재 비밀번호</FormLabel>
@@ -106,7 +158,14 @@ export default function PasswordForm() {
         />
         
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? '변경 중...' : '비밀번호 변경'}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              변경 중...
+            </>
+          ) : (
+            "비밀번호 변경"
+          )}
         </Button>
       </form>
     </Form>

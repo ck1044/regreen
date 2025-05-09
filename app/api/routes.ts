@@ -132,6 +132,7 @@ export interface UserProfile {
   name: string;
   phoneNumber: string;
   university?: string;
+  isAdmin?: boolean;
 }
 
 export interface UpdateProfileRequest {
@@ -151,7 +152,8 @@ export interface InventoryCreateRequest {
   description: string;
   price: number;
   quantity: number;
-  availableTime: string;
+  startTime: string;
+  endTime: string;
 }
 
 // 오늘의 재고 조회 응답 타입
@@ -161,6 +163,7 @@ export interface TodayInventoryItem {
     name: string;
     price: number;
     imageUrl: string;
+    quantity: number;
     startTime: string;
     endTime: string;
   };

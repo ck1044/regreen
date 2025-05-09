@@ -13,7 +13,6 @@ import { Loader2 } from "lucide-react";
 // 프로필 폼 스키마 정의
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: "이름은 2글자 이상이어야 합니다." }),
-  email: z.string().email({ message: "유효한 이메일 주소를 입력해주세요." }),
   phone: z.string().regex(/^\d{3}-\d{4}-\d{4}$|^\d{11}$/, { 
     message: "전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678 또는 01012345678)" 
   }),
@@ -26,7 +25,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 export interface ProfileFormProps {
   userProfile: {
     name: string;
-    email: string;
     phone: string;
     university: string;
   };
@@ -41,7 +39,6 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: userProfile.name,
-      email: userProfile.email,
       phone: userProfile.phone,
       university: userProfile.university
     },
@@ -76,21 +73,6 @@ export default function ProfileForm({ userProfile, onSubmit }: ProfileFormProps)
               <FormLabel>이름</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="이름을 입력하세요" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* 이메일 필드 */}
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>이메일</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="이메일을 입력하세요" type="email" />
               </FormControl>
               <FormMessage />
             </FormItem>
