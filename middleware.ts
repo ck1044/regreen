@@ -7,11 +7,11 @@ const customerRoutes = [
   '/inventory',
   '/my-reservations',
   '/shops',
-  '/(customer)/profile',
+  '/customer-profile',
 ];
 
 const ownerRoutes = [
-  '/owner_profile',
+  '/owner-profile',
   '/owner/reservations',
   '/manage-inventory',
   '/manage-inventory/register',

@@ -6,14 +6,14 @@ import { usePathname } from "next/navigation";
 import { Home, Store, Calendar, Bell, User, Package, Settings, BarChart, ShoppingBag } from "lucide-react";
 
 type NavigationBarProps = {
-  userRole: "customer" | "shop" | "admin";
+  userRole: "customer" | "store-owner" | "admin";
 };
 
 type NavItem = {
   href: string;
   label: string;
   icon: React.ReactNode;
-  roles: ("customer" | "shop" | "admin")[];
+  roles: ("customer" | "store-owner" | "admin")[];
 };
 
 const NavigationBar = ({ userRole }: NavigationBarProps) => {
@@ -41,7 +41,7 @@ const NavigationBar = ({ userRole }: NavigationBarProps) => {
     },
 
     {
-      href: "/customer_profile",
+      href: "/customer-profile",
       label: "프로필",
       icon: <User size={20} />,
       roles: ["customer"],
@@ -52,20 +52,20 @@ const NavigationBar = ({ userRole }: NavigationBarProps) => {
       href: "/manage-inventory",
       label: "상품 관리",
       icon: <Package size={20} />,
-      roles: ["shop"],
+      roles: ["store-owner"],
     },
     {
       href: "/owner/reservations",
       label: "예약 관리",
       icon: <Calendar size={20} />,
-      roles: ["shop"],
+      roles: ["store-owner"],
     },
 
     {
-      href: "/owner_profile",
+      href: "/owner-profile",
       label: "프로필",
       icon: <User size={20} />,
-      roles: ["shop"],
+      roles: ["store-owner"],
     },
     
     // 관리자용 메뉴
